@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  bff-orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ENVIRONMENT=production
+      - USER_SERVICE_URL=https://jsonplaceholder.typicode.com
+      - PRODUCT_SERVICE_URL=https://fakestoreapi.com
+    restart: unless-stopped
