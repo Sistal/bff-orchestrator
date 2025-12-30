@@ -73,7 +73,7 @@ bff-orchestrator/
 
 ## Prerequisites
 
-- Go 1.21 or higher
+- Go 1.23 or higher
 - Docker (optional, for containerization)
 
 ## Getting Started
