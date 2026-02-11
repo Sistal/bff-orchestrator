@@ -247,6 +247,65 @@ The service is designed to be deployed as a stateless container:
 4. Ensure code quality and add tests
 5. Submit a pull request
 
+## 📚 API Contracts Documentation
+
+Este BFF consume datos de **4 microservicios** backend. La documentación completa de los contratos de API se encuentra en la carpeta [`api-contracts/`](api-contracts/).
+
+### Documentación Disponible
+
+| Documento | Descripción |
+|-----------|-------------|
+| [**INDEX.md**](api-contracts/INDEX.md) | 📖 Índice principal y guía general |
+| [**MS-Authentication**](api-contracts/MS-AUTHENTICATION-CONTRACT.md) | 🔐 Servicio de autenticación JWT (Puerto 8081) |
+| [**MS-Funcionario**](api-contracts/MS-FUNCIONARIO-CONTRACT.md) | 👥 Servicio de recursos humanos (Puerto 8082) |
+| [**MS-Operations**](api-contracts/MS-OPERATIONS-CONTRACT.md) | 📦 Servicio de operaciones (Puerto 8083) |
+| [**MS-Catalog**](api-contracts/MS-CATALOG-CONTRACT.md) | 📋 Servicio de catálogos maestros (Puerto 8084) |
+| [**DATABASE-SCHEMA.md**](api-contracts/DATABASE-SCHEMA.md) | 🗄️ Esquema completo de base de datos |
+| [**IMPLEMENTATION-GUIDE.md**](api-contracts/IMPLEMENTATION-GUIDE.md) | 🛠️ Guía de implementación |
+| [**USAGE-EXAMPLES.md**](api-contracts/USAGE-EXAMPLES.md) | 💻 Ejemplos de uso (cURL, JS, Go) |
+| [**DIAGRAMS.md**](api-contracts/DIAGRAMS.md) | 📊 Diagramas de flujo y arquitectura |
+
+### Arquitectura de Microservicios
+
+```
+┌─────────────────┐         ┌─────────────────┐
+│   Frontend 1    │         │   Frontend 2    │
+│  (Employee App) │         │  (Admin Panel)  │
+└────────┬────────┘         └────────┬────────┘
+         │                           │
+         └───────────┬───────────────┘
+                     │
+                     ▼
+         ┌───────────────────────┐
+         │   BFF Orchestrator    │
+         │    (Port 8080)        │
+         └───────────┬───────────┘
+                     │
+         ┌───────────┼───────────┬───────────┐
+         │           │           │           │
+         ▼           ▼           ▼           ▼
+┌────────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐
+│MS-Auth     │ │MS-Funcio │ │MS-Opera  │ │MS-Catalog│
+│(Port 8081) │ │(Port 8082)│ │(Port 8083)│ │(Port 8084)│
+└──────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬────┘
+       │            │            │            │
+       └────────────┴────────────┴────────────┘
+                    │
+                    ▼
+         ┌──────────────────────┐
+         │  PostgreSQL (Supabase)│
+         └──────────────────────┘
+```
+
+### Inicio Rápido
+
+1. **Revisar contratos**: Comienza con el [INDEX.md](api-contracts/INDEX.md)
+2. **Configurar BD**: Usa el [DATABASE-SCHEMA.md](api-contracts/DATABASE-SCHEMA.md)
+3. **Implementar servicios**: Sigue la [IMPLEMENTATION-GUIDE.md](api-contracts/IMPLEMENTATION-GUIDE.md)
+4. **Probar endpoints**: Revisa los [USAGE-EXAMPLES.md](api-contracts/USAGE-EXAMPLES.md)
+
+---
+
 ## License
 
 MIT License

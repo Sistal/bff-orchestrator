@@ -1,0 +1,860 @@
+basePath: /
+definitions:
+  github_com_Sistal_bff-orchestrator_internal_models.BodyMeasurements:
+    properties:
+      estatura_m:
+        type: number
+      pecho_cm:
+        type: number
+    type: object
+  github_com_Sistal_bff-orchestrator_internal_models.CreateBranchChangeRequest:
+    properties:
+      branchId:
+        type: integer
+      effectiveDate:
+        type: string
+      reason:
+        type: string
+    type: object
+  github_com_Sistal_bff-orchestrator_internal_models.CreateGarmentChangeRequest:
+    properties:
+      newSize:
+        type: string
+      prenda:
+        type: string
+      reason:
+        type: string
+    type: object
+  github_com_Sistal_bff-orchestrator_internal_models.CreateReplenishmentRequest:
+    properties:
+      items:
+        items:
+          type: string
+        type: array
+      reason:
+        type: string
+    type: object
+  github_com_Sistal_bff-orchestrator_internal_models.NotificationsPreferences:
+    properties:
+      email:
+        type: boolean
+    type: object
+  github_com_Sistal_bff-orchestrator_internal_models.UpdateContactRequest:
+    properties:
+      celular:
+        type: string
+      email:
+        type: string
+    type: object
+  github_com_Sistal_bff-orchestrator_internal_models.UpdatePreferencesRequest:
+    properties:
+      notifications:
+        $ref: '#/definitions/github_com_Sistal_bff-orchestrator_internal_models.NotificationsPreferences'
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: BFF Orchestrator API for Sistal Application.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: BFF Orchestrator API
+  version: "1.0"
+paths:
+  /api/v1/funcionarios/{id}/medidas:
+    get:
+      description: Get body measurements for a specific employee
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get employee measurements
+      tags:
+      - employees
+    post:
+      consumes:
+      - application/json
+      description: Register or update body measurements for a specific employee
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Body measurements
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Sistal_bff-orchestrator_internal_models.BodyMeasurements'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Register employee measurements
+      tags:
+      - employees
+  /api/v1/funcionarios/me:
+    get:
+      description: Get the current employee's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get employee profile
+      tags:
+      - employees
+    put:
+      consumes:
+      - application/json
+      description: Update the current employee's contact information
+      parameters:
+      - description: Contact information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Sistal_bff-orchestrator_internal_models.UpdateContactRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update employee contact
+      tags:
+      - employees
+  /api/v1/funcionarios/me/actividad:
+    get:
+      description: Get activity history for the current employee
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get employee activity
+      tags:
+      - employees
+  /api/v1/funcionarios/me/preferencias:
+    put:
+      consumes:
+      - application/json
+      description: Update the current employee's preferences
+      parameters:
+      - description: Preferences
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Sistal_bff-orchestrator_internal_models.UpdatePreferencesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update employee preferences
+      tags:
+      - employees
+  /api/v1/funcionarios/me/seguridad:
+    put:
+      description: Update the current employee's security settings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update employee security
+      tags:
+      - employees
+  /api/v1/funcionarios/me/stats:
+    get:
+      description: Get statistics for the current employee
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get employee statistics
+      tags:
+      - employees
+  /archivos/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file attachment
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upload file
+      tags:
+      - requests
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Get currently logged in user details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - auth
+  /auth/validate:
+    get:
+      consumes:
+      - application/json
+      description: Check if the token is valid
+      parameters:
+      - description: Bearer Token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Validate token
+      tags:
+      - auth
+  /campanas/activa:
+    get:
+      description: Get the currently active campaign
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get active campaign
+      tags:
+      - catalog
+  /catalogo/motivos-cambio:
+    get:
+      description: Get all change reasons for garment changes
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get change reasons catalog
+      tags:
+      - catalog
+  /catalogo/prenda-tipos:
+    get:
+      description: Get all available garment types
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get garment types catalog
+      tags:
+      - catalog
+  /catalogo/tallas:
+    get:
+      description: Get all available sizes
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get sizes catalog
+      tags:
+      - catalog
+  /entregas:
+    get:
+      description: Get list of deliveries for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get deliveries
+      tags:
+      - deliveries
+  /entregas/{id}:
+    get:
+      description: Get a specific delivery by its ID
+      parameters:
+      - description: Delivery ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get delivery by ID
+      tags:
+      - deliveries
+  /entregas/{id}/confirmar:
+    post:
+      description: Confirm receipt of a delivery
+      parameters:
+      - description: Delivery ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Confirm delivery
+      tags:
+      - deliveries
+  /health:
+    get:
+      description: Get the health status of the service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - health
+  /notificaciones:
+    get:
+      description: Get list of notifications for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get notifications
+      tags:
+      - notifications
+  /notificaciones/{id}/leida:
+    patch:
+      description: |-
+        Mark a specific notification as read
+        Mark all notifications for the current user as read
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Mark all notifications as read
+      tags:
+      - notifications
+      - notifications
+  /notificaciones/leer-todas:
+    patch:
+      description: |-
+        Mark a specific notification as read
+        Mark all notifications for the current user as read
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Mark all notifications as read
+      tags:
+      - notifications
+      - notifications
+  /solicitudes:
+    get:
+      description: Get list of requests with optional filters
+      parameters:
+      - description: Request type
+        in: query
+        name: tipo
+        type: string
+      - description: Period filter
+        in: query
+        name: periodo
+        type: string
+      - description: Status filter
+        in: query
+        name: estado
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get requests
+      tags:
+      - requests
+  /solicitudes/{id}:
+    get:
+      description: Get a specific request by its ID
+      parameters:
+      - description: Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get request by ID
+      tags:
+      - requests
+  /solicitudes/cambio-prenda:
+    post:
+      consumes:
+      - application/json
+      description: Create a new garment change request
+      parameters:
+      - description: Garment change request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Sistal_bff-orchestrator_internal_models.CreateGarmentChangeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create garment change request
+      tags:
+      - requests
+  /solicitudes/cambio-sucursal:
+    post:
+      consumes:
+      - application/json
+      description: Create a new branch change request
+      parameters:
+      - description: Branch change request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Sistal_bff-orchestrator_internal_models.CreateBranchChangeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create branch change request
+      tags:
+      - branches
+  /solicitudes/cambio-sucursal/historial:
+    get:
+      description: Get history of branch change requests
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get branch change history
+      tags:
+      - branches
+  /solicitudes/reposicion:
+    post:
+      consumes:
+      - application/json
+      description: Create a new replenishment request
+      parameters:
+      - description: Replenishment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Sistal_bff-orchestrator_internal_models.CreateReplenishmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create replenishment request
+      tags:
+      - requests
+  /sucursales:
+    get:
+      description: Get list of all branches
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all branches
+      tags:
+      - branches
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
