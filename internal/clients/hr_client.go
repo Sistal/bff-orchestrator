@@ -61,24 +61,6 @@ func (c *HRClient) UpdateContact(id string, req models.UpdateContactRequest) err
 	return nil
 }
 
-func (c *HRClient) GetBranches() ([]models.Branch, error) {
-	resp, err := c.Client.Get(c.BaseURL + "/api/v1/sucursales")
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get branches: %d", resp.StatusCode)
-	}
-
-	var branches []models.Branch
-	if err := json.NewDecoder(resp.Body).Decode(&branches); err != nil {
-		return nil, err
-	}
-	return branches, nil
-}
-
 func (c *HRClient) GetMeasurements(id string) (*models.BodyMeasurements, error) {
 	resp, err := c.Client.Get(fmt.Sprintf("%s/api/v1/funcionarios/%s/medidas", c.BaseURL, id))
 	if err != nil {
@@ -97,12 +79,121 @@ func (c *HRClient) GetMeasurements(id string) (*models.BodyMeasurements, error) 
 	return &m, nil
 }
 
-func (c *HRClient) GetChangeHistory() ([]models.BranchChangeRequestHistory, error) {
-	// Call /api/v1/transferencias
-	return nil, nil // Placeholder
+func (c *HRClient) RegisterMeasurements(id string, req models.BodyMeasurements) (*models.BodyMeasurements, error) {
+	body, _ := json.Marshal(req)
+	reqHTTP, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/funcionarios/%s/medidas", c.BaseURL, id), bytes.NewBuffer(body))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.Client.Do(reqHTTP)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("failed to register measurements: %d", resp.StatusCode)
+	}
+
+	var m models.BodyMeasurements
+	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+		return nil, err
+	}
+	return &m, nil
 }
 
-func (c *HRClient) CreateBranchChangeRequest(req models.CreateBranchChangeRequest) error {
-	// POST /api/v1/transferencias
+func (c *HRClient) UpdateMeasurements(id string, req models.BodyMeasurements) (*models.BodyMeasurements, error) {
+	body, _ := json.Marshal(req)
+	reqHTTP, _ := http.NewRequest("PUT", fmt.Sprintf("%s/api/v1/funcionarios/%s/medidas", c.BaseURL, id), bytes.NewBuffer(body))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.Client.Do(reqHTTP)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to update measurements: %d", resp.StatusCode)
+	}
+
+	var m models.BodyMeasurements
+	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+func (c *HRClient) UpdateSecurity(id string, req models.UpdateSecurityRequest) error {
+	body, _ := json.Marshal(req)
+	reqHTTP, _ := http.NewRequest("PUT", fmt.Sprintf("%s/api/v1/funcionarios/%s/seguridad", c.BaseURL, id), bytes.NewBuffer(body))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.Client.Do(reqHTTP)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to update security: %d", resp.StatusCode)
+	}
 	return nil
+}
+
+func (c *HRClient) GetBranches() ([]models.Branch, error) {
+	resp, err := c.Client.Get(c.BaseURL + "/api/v1/sucursales")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get branches: %d", resp.StatusCode)
+	}
+
+	var branches []models.Branch
+	if err := json.NewDecoder(resp.Body).Decode(&branches); err != nil {
+		return nil, err
+	}
+	return branches, nil
+}
+
+func (c *HRClient) GetChangeHistory() ([]models.BranchChangeRequestHistory, error) {
+	resp, err := c.Client.Get(c.BaseURL + "/api/v1/transferencias")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get change history: %d", resp.StatusCode)
+	}
+
+	var history []models.BranchChangeRequestHistory
+	if err := json.NewDecoder(resp.Body).Decode(&history); err != nil {
+		return nil, err
+	}
+	return history, nil
+}
+
+func (c *HRClient) CreateBranchChangeRequest(req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error) {
+	body, _ := json.Marshal(req)
+	reqHTTP, _ := http.NewRequest("POST", c.BaseURL+"/api/v1/transferencias", bytes.NewBuffer(body))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.Client.Do(reqHTTP)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("failed to create branch change request: %d", resp.StatusCode)
+	}
+
+	var history models.BranchChangeRequestHistory
+	if err := json.NewDecoder(resp.Body).Decode(&history); err != nil {
+		return nil, err
+	}
+	return &history, nil
 }

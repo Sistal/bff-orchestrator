@@ -147,3 +147,23 @@ func (h *RequestHandler) UploadFile(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, resp)
 }
+
+// GetRecentRequests godoc
+// @Summary      Get recent requests
+// @Description  Get the most recent requests for the current user (dashboard)
+// @Tags         requests
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200  {array}   models.RequestSummary
+// @Failure      401  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router       /solicitudes/recent [get]
+func (h *RequestHandler) GetRecentRequests(c *gin.Context) {
+	userID := c.GetString("userID")
+	resp, err := h.service.GetRecentRequests(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}

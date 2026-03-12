@@ -9,6 +9,7 @@ import (
 type RequestService interface {
 	GetRequests(userID string, params map[string]string) ([]models.RequestSummary, error)
 	GetRequestByID(userID string, id string) (*models.RequestSummary, error)
+	GetRecentRequests(userID string) ([]models.RequestSummary, error)
 	CreateReplenishmentRequest(userID string, req models.CreateReplenishmentRequest) (*models.RequestSummary, error)
 	CreateGarmentChangeRequest(userID string, req models.CreateGarmentChangeRequest) (*models.RequestSummary, error)
 	UploadFile(userID string, file *multipart.FileHeader) (*models.FileUploadResponse, error)
@@ -41,6 +42,19 @@ func (s *MockRequestService) GetRequestByID(userID string, id string) (*models.R
 		Estado: "En Proceso",
 		Items:  []string{"Polera"},
 		Motivo: "Desgaste",
+	}, nil
+}
+
+func (s *MockRequestService) GetRecentRequests(userID string) ([]models.RequestSummary, error) {
+	return []models.RequestSummary{
+		{
+			ID:     "SOL-001",
+			Tipo:   "Reposición",
+			Fecha:  "2026-03-01",
+			Estado: "En Proceso",
+			Items:  []string{"Polera", "Pantalón"},
+			Motivo: "Desgaste",
+		},
 	}, nil
 }
 

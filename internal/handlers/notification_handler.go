@@ -21,8 +21,9 @@ func NewNotificationHandler(s services.NotificationService) *NotificationHandler
 // @Tags         notifications
 // @Security     BearerAuth
 // @Produce      json
-// @Success      200  {object}  map[string]interface{}
-// @Failure      500  {object}  map[string]string
+// @Success      200  {array}   models.Notification
+// @Failure      401  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
 // @Router       /notificaciones [get]
 func (h *NotificationHandler) GetNotifications(c *gin.Context) {
 	userID := c.GetString("userID")
@@ -41,18 +42,10 @@ func (h *NotificationHandler) GetNotifications(c *gin.Context) {
 // @Security     BearerAuth
 // @Produce      json
 // @Param        id   path      string  true  "Notification ID"
-// @Success      200
-// @Failure      500  {object}  map[string]string
+// @Success      200  {object}  map[string]interface{}
+// @Failure      401  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
 // @Router       /notificaciones/{id}/leida [patch]
-// MarkAllAsRead godoc
-// @Summary      Mark all notifications as read
-// @Description  Mark all notifications for the current user as read
-// @Tags         notifications
-// @Security     BearerAuth
-// @Produce      json
-// @Success      200
-// @Failure      500  {object}  map[string]string
-// @Router       /notificaciones/leer-todas [patch]
 func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
 	userID := c.GetString("userID")
 	id := c.Param("id")
@@ -60,14 +53,25 @@ func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
 	}
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
+// MarkAllAsRead godoc
+// @Summary      Mark all notifications as read
+// @Description  Mark all notifications for the current user as read
+// @Tags         notifications
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200  {object}  models.MarkAllReadResponse
+// @Failure      401  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router       /notificaciones/leer-todas [patch]
 func (h *NotificationHandler) MarkAllAsRead(c *gin.Context) {
 	userID := c.GetString("userID")
-	if err := h.service.MarkAllAsRead(userID); err != nil {
+	count, err := h.service.MarkAllAsRead(userID)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
 	}
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{"success": true, "count": count})
 }

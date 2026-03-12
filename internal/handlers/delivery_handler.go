@@ -62,13 +62,34 @@ func (h *DeliveryHandler) GetDeliveryByID(c *gin.Context) {
 // @Security     BearerAuth
 // @Produce      json
 // @Param        id   path      string  true  "Delivery ID"
-// @Success      200  {object}  map[string]interface{}
-// @Failure      500  {object}  map[string]string
+// @Success      200  {object}  models.DeliverySummary
+// @Failure      401  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
 // @Router       /entregas/{id}/confirmar [post]
 func (h *DeliveryHandler) ConfirmDelivery(c *gin.Context) {
 	userID := c.GetString("userID")
 	id := c.Param("id")
 	resp, err := h.service.ConfirmDelivery(userID, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// GetUpcomingDeliveries godoc
+// @Summary      Get upcoming deliveries
+// @Description  Get upcoming deliveries for the current user (dashboard)
+// @Tags         deliveries
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200  {array}   models.DeliverySummary
+// @Failure      401  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router       /api/v1/entregas/upcoming [get]
+func (h *DeliveryHandler) GetUpcomingDeliveries(c *gin.Context) {
+	userID := c.GetString("userID")
+	resp, err := h.service.GetUpcomingDeliveries(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return

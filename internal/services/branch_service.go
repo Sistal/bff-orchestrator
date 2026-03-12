@@ -8,9 +8,11 @@ import (
 type BranchService interface {
 	GetAllBranches() ([]models.Branch, error)
 	GetChangeHistory() ([]models.BranchChangeRequestHistory, error)
-	CreateChangeRequest(req models.CreateBranchChangeRequest) (*models.CreateBranchChangeRequest, error)
+	// CreateChangeRequest retorna el historial creado, no el request de entrada
+	CreateChangeRequest(req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error)
 }
 
+// MockBranchService — implementación mock para desarrollo/testing
 type MockBranchService struct{}
 
 func NewMockBranchService() BranchService {
@@ -19,8 +21,8 @@ func NewMockBranchService() BranchService {
 
 func (s *MockBranchService) GetAllBranches() ([]models.Branch, error) {
 	return []models.Branch{
-		{ID: 1, Name: "Casa Matriz - Santiago", Region: "RM"},
-		{ID: 2, Name: "Sucursal Norte", Region: "II"},
+		{ID: 1, Name: "Casa Matriz - Santiago", Direccion: "Av. Apoquindo 4800, Las Condes"},
+		{ID: 2, Name: "Sucursal Norte", Direccion: "Av. Grecia 750, Antofagasta"},
 	}, nil
 }
 
@@ -38,10 +40,19 @@ func (s *MockBranchService) GetChangeHistory() ([]models.BranchChangeRequestHist
 	}, nil
 }
 
-func (s *MockBranchService) CreateChangeRequest(req models.CreateBranchChangeRequest) (*models.CreateBranchChangeRequest, error) {
-	return &req, nil
+func (s *MockBranchService) CreateChangeRequest(req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error) {
+	return &models.BranchChangeRequestHistory{
+		ID:               99,
+		FechaSolicitud:   "2026-03-08",
+		FechaEfectiva:    req.EffectiveDate,
+		SucursalAnterior: "",
+		SucursalNueva:    "",
+		Motivo:           req.Reason,
+		Estado:           "Pendiente",
+	}, nil
 }
 
+// HTTPBranchService — implementación real que delega al ms-funcionario
 type HTTPBranchService struct {
 	client *clients.HRClient
 }
@@ -58,10 +69,6 @@ func (s *HTTPBranchService) GetChangeHistory() ([]models.BranchChangeRequestHist
 	return s.client.GetChangeHistory()
 }
 
-func (s *HTTPBranchService) CreateChangeRequest(req models.CreateBranchChangeRequest) (*models.CreateBranchChangeRequest, error) {
-	err := s.client.CreateBranchChangeRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	return &req, nil
+func (s *HTTPBranchService) CreateChangeRequest(req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error) {
+	return s.client.CreateBranchChangeRequest(req)
 }
