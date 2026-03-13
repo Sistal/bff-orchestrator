@@ -97,8 +97,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 					zap.String("cookie_name", "access_token"),
 				)
 
-				c.SetSameSite(http.SameSiteNoneMode)
-				c.SetCookie("access_token", loginData.Token, maxAge, "/", domain, false, true)
+				c.SetSameSite(http.SameSiteLaxMode)
+				c.SetCookie("access_token", loginData.Token, maxAge, "/", "", false, true)
 
 				// ── DIAGNÓSTICO: confirmar Set-Cookie header enviado al browser ──
 				log.Debug("Login: Set-Cookie header enviado al browser",
@@ -168,6 +168,10 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		zap.String("rut", req.RUT),
 		zap.Int("id_rol", req.IDRol),
 		zap.String("ip", ip),
+		zap.String("nombres", req.Nombres),
+		zap.String("apellido_paterno", req.ApellidoPaterno),
+		zap.String("apellido_materno", req.ApellidoMaterno),
+		zap.String("rut_funcionario", req.RutFuncionario),
 	)
 
 	code, resp, err := h.service.Register(&req)

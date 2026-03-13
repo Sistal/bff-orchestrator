@@ -16,6 +16,20 @@ func NewBranchHandler(s services.BranchService) *BranchHandler {
 	return &BranchHandler{service: s}
 }
 
+// requireEmployeeID extrae el employeeID del contexto y retorna false (con 401) si está vacío.
+// Usado por handlers que operan sobre el funcionario autenticado.
+func requireEmployeeID(c *gin.Context) (string, bool) {
+	id := c.GetString("id_funcionario")
+	if id == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "Usuario sin funcionario asociado",
+		})
+		return "", false
+	}
+	return id, true
+}
+
 // GetAllBranches godoc
 // @Summary      Get all branches
 // @Description  Get list of all branches
@@ -36,15 +50,20 @@ func (h *BranchHandler) GetAllBranches(c *gin.Context) {
 
 // GetChangeHistory godoc
 // @Summary      Get branch change history
-// @Description  Get history of branch change requests
+// @Description  Get history of branch change requests for the authenticated employee
 // @Tags         branches
 // @Security     BearerAuth
 // @Produce      json
 // @Success      200  {object}  map[string]interface{}
+// @Failure      401  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /solicitudes/cambio-sucursal/historial [get]
 func (h *BranchHandler) GetChangeHistory(c *gin.Context) {
-	resp, err := h.service.GetChangeHistory()
+	employeeID, ok := requireEmployeeID(c)
+	if !ok {
+		return
+	}
+	resp, err := h.service.GetChangeHistory(employeeID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
@@ -54,7 +73,7 @@ func (h *BranchHandler) GetChangeHistory(c *gin.Context) {
 
 // CreateChangeRequest godoc
 // @Summary      Create branch change request
-// @Description  Create a new branch change request
+// @Description  Create a new branch change request for the authenticated employee
 // @Tags         branches
 // @Security     BearerAuth
 // @Accept       json
@@ -62,16 +81,21 @@ func (h *BranchHandler) GetChangeHistory(c *gin.Context) {
 // @Param        request  body      models.CreateBranchChangeRequest  true  "Branch change request"
 // @Success      201      {object}  map[string]interface{}
 // @Failure      400      {object}  map[string]string
+// @Failure      401      {object}  map[string]string
 // @Failure      500      {object}  map[string]string
 // @Router       /solicitudes/cambio-sucursal [post]
 func (h *BranchHandler) CreateChangeRequest(c *gin.Context) {
+	employeeID, ok := requireEmployeeID(c)
+	if !ok {
+		return
+	}
 	var req models.CreateBranchChangeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
 		return
 	}
 
-	resp, err := h.service.CreateChangeRequest(req)
+	resp, err := h.service.CreateChangeRequest(employeeID, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return

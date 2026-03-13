@@ -303,7 +303,7 @@ func (c *OpsClient) MarkAllAsRead(employeeID string) (int, error) {
 // ─── Dashboard ─────────────────────────────────────────────────────────────────
 
 func (c *OpsClient) GetDashboardStats(employeeID string) (*models.HomeStats, error) {
-	reqHTTP, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/operaciones/dashboard?id_usuario=%s", c.BaseURL, employeeID), nil)
+	reqHTTP, _ := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/operaciones/dashboard?id_funcionario=%s", c.BaseURL, employeeID), nil)
 	resp, err := c.Client.Do(reqHTTP)
 	if err != nil {
 		return nil, err

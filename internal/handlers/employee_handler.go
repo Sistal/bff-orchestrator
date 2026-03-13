@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/Sistal/bff-orchestrator/internal/logger"
 	"github.com/Sistal/bff-orchestrator/internal/models"
 	"github.com/Sistal/bff-orchestrator/internal/services"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type EmployeeHandler struct {
@@ -27,12 +30,23 @@ func NewEmployeeHandler(s services.EmployeeService) *EmployeeHandler {
 // @Failure      500  {object}  models.ErrorResponse
 // @Router       /api/v1/funcionarios/me [get]
 func (h *EmployeeHandler) GetProfile(c *gin.Context) {
-	userID := c.GetString("userID")
-	resp, err := h.service.GetProfile(userID)
+	log := logger.Get()
+	employeeID, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		log.Warn("GetProfile: Usuario no autorizado o sin employeeID")
+		return
+	}
+
+	log.Debug("GetProfile: Solicitud recibida", zap.String("employee_id", employeeID))
+
+	resp, err := h.service.GetProfile(employeeID)
 	if err != nil {
+		log.Error("GetProfile: Error al obtener perfil", zap.String("employee_id", employeeID), zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
 	}
+
+	log.Debug("GetProfile: Perfil retornado exitosamente", zap.String("employee_id", employeeID))
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -50,13 +64,16 @@ func (h *EmployeeHandler) GetProfile(c *gin.Context) {
 // @Failure      500      {object}  models.ErrorResponse
 // @Router       /api/v1/funcionarios/me [put]
 func (h *EmployeeHandler) UpdateContact(c *gin.Context) {
-	userID := c.GetString("userID")
+	employeeID, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		return
+	}
 	var req models.UpdateContactRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
 		return
 	}
-	resp, err := h.service.UpdateContact(userID, req)
+	resp, err := h.service.UpdateContact(employeeID, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
@@ -78,18 +95,20 @@ func (h *EmployeeHandler) UpdateContact(c *gin.Context) {
 // @Failure      500      {object}  models.ErrorResponse
 // @Router       /api/v1/funcionarios/me/preferencias [put]
 func (h *EmployeeHandler) UpdatePreferences(c *gin.Context) {
-	userID := c.GetString("userID")
+	employeeID, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		return
+	}
 	var req models.UpdatePreferencesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
 		return
 	}
-	resp, err := h.service.UpdatePreferences(userID, req)
+	resp, err := h.service.UpdatePreferences(employeeID, req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
 	}
-	// Retornar el objeto actualizado como espera el frontend
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -107,13 +126,16 @@ func (h *EmployeeHandler) UpdatePreferences(c *gin.Context) {
 // @Failure      500      {object}  models.ErrorResponse
 // @Router       /api/v1/funcionarios/me/seguridad [put]
 func (h *EmployeeHandler) UpdateSecurity(c *gin.Context) {
-	userID := c.GetString("userID")
+	employeeID, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		return
+	}
 	var req models.UpdateSecurityRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
 		return
 	}
-	if err := h.service.UpdateSecurity(userID, req); err != nil {
+	if err := h.service.UpdateSecurity(employeeID, req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
 	}
@@ -131,8 +153,11 @@ func (h *EmployeeHandler) UpdateSecurity(c *gin.Context) {
 // @Failure      500  {object}  models.ErrorResponse
 // @Router       /api/v1/funcionarios/me/stats [get]
 func (h *EmployeeHandler) GetStats(c *gin.Context) {
-	userID := c.GetString("userID")
-	resp, err := h.service.GetStats(userID)
+	employeeID, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		return
+	}
+	resp, err := h.service.GetStats(employeeID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
@@ -151,8 +176,11 @@ func (h *EmployeeHandler) GetStats(c *gin.Context) {
 // @Failure      500  {object}  models.ErrorResponse
 // @Router       /api/v1/funcionarios/me/actividad [get]
 func (h *EmployeeHandler) GetActivity(c *gin.Context) {
-	userID := c.GetString("userID")
-	resp, err := h.service.GetActivity(userID)
+	employeeID, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		return
+	}
+	resp, err := h.service.GetActivity(employeeID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
@@ -162,7 +190,7 @@ func (h *EmployeeHandler) GetActivity(c *gin.Context) {
 
 // GetMeasurements godoc
 // @Summary      Get employee measurements
-// @Description  Get body measurements for a specific employee
+// @Description  Get body measurements for a specific employee (admin)
 // @Tags         employees
 // @Security     BearerAuth
 // @Produce      json
@@ -183,7 +211,7 @@ func (h *EmployeeHandler) GetMeasurements(c *gin.Context) {
 
 // RegisterMeasurements godoc
 // @Summary      Register employee measurements
-// @Description  Register body measurements for a specific employee
+// @Description  Register body measurements for a specific employee (admin)
 // @Tags         employees
 // @Security     BearerAuth
 // @Accept       json
@@ -212,7 +240,7 @@ func (h *EmployeeHandler) RegisterMeasurements(c *gin.Context) {
 
 // UpdateMeasurements godoc
 // @Summary      Update employee measurements
-// @Description  Update body measurements for a specific employee
+// @Description  Update body measurements for a specific employee (admin)
 // @Tags         employees
 // @Security     BearerAuth
 // @Accept       json
@@ -241,7 +269,7 @@ func (h *EmployeeHandler) UpdateMeasurements(c *gin.Context) {
 
 // GetMeasurementsHistory godoc
 // @Summary      Get employee measurements history
-// @Description  Get body measurements history for a specific employee
+// @Description  Get body measurements history for a specific employee (admin)
 // @Tags         employees
 // @Security     BearerAuth
 // @Produce      json
@@ -252,8 +280,6 @@ func (h *EmployeeHandler) UpdateMeasurements(c *gin.Context) {
 // @Router       /api/v1/funcionarios/{id}/medidas/historial [get]
 func (h *EmployeeHandler) GetMeasurementsHistory(c *gin.Context) {
 	id := c.Param("id")
-	// La relación es 1:1 en el DDL actual (Funcionario.id_medidas → Medidas Funcionario).
-	// Se retorna la medida actual en un array. Para historial real se requiere cambio de DDL.
 	m, err := h.service.GetMeasurements(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
@@ -276,10 +302,98 @@ func notImplemented(c *gin.Context) {
 }
 
 func (h *EmployeeHandler) ListEmployees(c *gin.Context)      { notImplemented(c) }
-func (h *EmployeeHandler) CreateEmployee(c *gin.Context)     { notImplemented(c) }
 func (h *EmployeeHandler) GetEmployeeByID(c *gin.Context)    { notImplemented(c) }
 func (h *EmployeeHandler) UpdateEmployee(c *gin.Context)     { notImplemented(c) }
 func (h *EmployeeHandler) DeleteEmployee(c *gin.Context)     { notImplemented(c) }
 func (h *EmployeeHandler) FilterEmployees(c *gin.Context)    { notImplemented(c) }
 func (h *EmployeeHandler) ActivateEmployee(c *gin.Context)   { notImplemented(c) }
 func (h *EmployeeHandler) DeactivateEmployee(c *gin.Context) { notImplemented(c) }
+
+// CreateEmployee godoc
+// @Summary      Create employee
+// @Description  Create a new employee profile linked to a user.
+// @Tags         employees
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.CreateEmployeeRequest  true  "Employee details"
+// @Success      201      {object}  models.EmployeeProfile
+// @Failure      400      {object}  models.ErrorResponse
+// @Failure      401      {object}  models.ErrorResponse
+// @Failure      500      {object}  models.ErrorResponse
+// @Router       /api/v1/funcionarios [post]
+func (h *EmployeeHandler) CreateEmployee(c *gin.Context) {
+	// Obtener userID desde el token (contexto)
+	userID := c.GetString("userID")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "message": "User ID not found in token"})
+		return
+	}
+
+	var req models.CreateEmployeeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
+		return
+	}
+
+	// Forzar el UserID en el request con el del token para seguridad
+	// (En caso de que sea un admin creando para otro, la lógica podría cambiar,
+	//  pero aquí asumimos que el usuario que lo crea es el mismo si no es admin,
+	//  o si es admin, habría que ver si se permite sobreescribir).
+	//
+	// Vamos a asumir aquí que el endpoint es para que un usuario se "auto-complete" como funcionario
+	// O para que un admin cree uno. Para simplificar, usamos el userID del token.
+	// Si se desea soportar creación por admins para terceros, habría que chequear roles.
+	// Por ahora: Parseamos userID a int y lo asignamos.
+	importStrconv, err := strconv.Atoi(userID)
+	if err == nil {
+		// Si en el json venía otro user_id y no somos admin, esto lo sobreescribe.
+		// Si queremos permitir que un admin ponga cualquier ID, deberíamos chequear rol.
+		// Dado el requerimiento "extrae el id_usuario del token", priorizamos el token.
+		req.UserID = importStrconv
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": "Invalid User ID in token"})
+		return
+	}
+
+	resp, err := h.service.CreateEmployee(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resp)
+}
+
+// requireEmployeeByUserId extrae el userID del contexto y consulta al servicio para obtener el employeeID.
+// Reemplaza la lógica anterior que dependía del middleware para poblar "employeeID".
+func (h *EmployeeHandler) requireEmployeeByUserId(c *gin.Context) (string, bool) {
+	log := logger.Get()
+	userID := c.GetString("userID")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "User ID no encontrado en el contexto",
+		})
+		return "", false
+	}
+
+	empIDInt, err := h.service.GetEmployeeByUserID(userID)
+	if err != nil {
+		log.Error("requireEmployeeByUserId: Error al obtener funcionario por usuario",
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": "Error al consultar información del funcionario"})
+		return "", false
+	}
+
+	if empIDInt == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "Usuario sin funcionario asociado",
+		})
+		return "", false
+	}
+
+	return strconv.Itoa(empIDInt), true
+}

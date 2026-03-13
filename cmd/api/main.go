@@ -82,7 +82,6 @@ func main() {
 	catalogClient := clients.NewCatalogClient()
 
 	// Initialize Services (Real HTTP implementations)
-	authService := services.NewHTTPAuthService(identityClient)
 	catalogService := services.NewHTTPCatalogService(catalogClient)
 	branchService := services.NewHTTPBranchService(hrClient)
 
@@ -91,6 +90,9 @@ func main() {
 
 	// Employee Service combines HR and Ops (stats)
 	employeeService := services.NewHTTPEmployeeService(hrClient, opsClient)
+
+	// Auth Service now depends on Employee Service for full registration
+	authService := services.NewHTTPAuthService(identityClient, employeeService)
 
 	// Cast OpsService to interfaces required by handlers
 	var requestService services.RequestService = opsService
@@ -128,7 +130,7 @@ func main() {
 
 	// Protected Routes — autenticadas con Bearer JWT
 	api := r.Group("/")
-	api.Use(middleware.BearerAuthMiddleware(identityClient))
+	api.Use(middleware.BearerAuthMiddleware(identityClient, hrClient))
 	{
 		// Auth — rutas protegidas
 		api.GET("/api/v1/auth/me", authHandler.GetMe)
@@ -170,7 +172,6 @@ func main() {
 		api.GET("/notificaciones", notificationHandler.GetNotifications)
 		api.PATCH("/notificaciones/leer-todas", notificationHandler.MarkAllAsRead)
 		api.PATCH("/notificaciones/:id/leida", notificationHandler.MarkAsRead)
-
 		// Employee / Officials
 		v1 := api.Group("/api/v1")
 		{

@@ -52,6 +52,14 @@ type RegisterRequest struct {
 	Password        string `json:"password"           binding:"required"`
 	IDRol           int    `json:"id_rol"             binding:"required"`
 	IDEstadoUsuario int    `json:"id_estado_usuario"`
+
+	// Campos adicionales para crear funcionario (opcionales si solo se crea usuario admin sin perfil funcionario)
+	RutFuncionario  string `json:"rut_funcionario,omitempty"`
+	Nombres         string `json:"nombres,omitempty"`
+	ApellidoPaterno string `json:"apellido_paterno,omitempty"`
+	ApellidoMaterno string `json:"apellido_materno,omitempty"`
+	Email           string `json:"email,omitempty"`
+	Genero          int    `json:"genero,omitempty"`
 }
 
 // RefreshTokenRequest body de POST /api/v1/auth/refresh
@@ -109,13 +117,17 @@ type ValidateTokenData struct {
 
 // AuthValidateResponse respuesta interna del ms-authentication para validación de token.
 type AuthValidateResponse struct {
-	Valid     bool   `json:"valid"`
-	UserID    int    `json:"user_id"`
-	Username  string `json:"username"`
-	Role      int    `json:"role"`
-	RoleName  string `json:"role_name"`
-	IssuedAt  int64  `json:"issued_at"`
-	ExpiresAt int64  `json:"expires_at"`
+	Valid          bool   `json:"valid"`
+	UserID         int    `json:"user_id"`
+	Username       string `json:"username"`
+	NombreCompleto string `json:"nombre_completo"`
+	RUT            string `json:"rut"`
+	Role           int    `json:"role"`
+	RoleName       string `json:"role_name"`
+	EstadoID       int    `json:"estado_id"`
+	EstadoName     string `json:"estado_name"`
+	IssuedAt       int64  `json:"issued_at"`
+	ExpiresAt      int64  `json:"expires_at"`
 }
 
 // AuthMeResponse respuesta legacy de /auth/me (reemplazado por UsuarioResponseDTO).

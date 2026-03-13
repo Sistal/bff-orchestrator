@@ -7,9 +7,11 @@ import (
 
 type BranchService interface {
 	GetAllBranches() ([]models.Branch, error)
-	GetChangeHistory() ([]models.BranchChangeRequestHistory, error)
-	// CreateChangeRequest retorna el historial creado, no el request de entrada
-	CreateChangeRequest(req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error)
+	// employeeID es el id_funcionario resuelto por el middleware desde la cookie.
+	GetChangeHistory(employeeID string) ([]models.BranchChangeRequestHistory, error)
+	// CreateChangeRequest retorna el historial creado, no el request de entrada.
+	// employeeID es el id_funcionario resuelto por el middleware desde la cookie.
+	CreateChangeRequest(employeeID string, req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error)
 }
 
 // MockBranchService — implementación mock para desarrollo/testing
@@ -26,7 +28,7 @@ func (s *MockBranchService) GetAllBranches() ([]models.Branch, error) {
 	}, nil
 }
 
-func (s *MockBranchService) GetChangeHistory() ([]models.BranchChangeRequestHistory, error) {
+func (s *MockBranchService) GetChangeHistory(employeeID string) ([]models.BranchChangeRequestHistory, error) {
 	return []models.BranchChangeRequestHistory{
 		{
 			ID:               1,
@@ -40,10 +42,10 @@ func (s *MockBranchService) GetChangeHistory() ([]models.BranchChangeRequestHist
 	}, nil
 }
 
-func (s *MockBranchService) CreateChangeRequest(req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error) {
+func (s *MockBranchService) CreateChangeRequest(employeeID string, req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error) {
 	return &models.BranchChangeRequestHistory{
 		ID:               99,
-		FechaSolicitud:   "2026-03-08",
+		FechaSolicitud:   "2026-03-12",
 		FechaEfectiva:    req.EffectiveDate,
 		SucursalAnterior: "",
 		SucursalNueva:    "",
@@ -65,10 +67,10 @@ func (s *HTTPBranchService) GetAllBranches() ([]models.Branch, error) {
 	return s.client.GetBranches()
 }
 
-func (s *HTTPBranchService) GetChangeHistory() ([]models.BranchChangeRequestHistory, error) {
-	return s.client.GetChangeHistory()
+func (s *HTTPBranchService) GetChangeHistory(employeeID string) ([]models.BranchChangeRequestHistory, error) {
+	return s.client.GetChangeHistory(employeeID)
 }
 
-func (s *HTTPBranchService) CreateChangeRequest(req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error) {
-	return s.client.CreateBranchChangeRequest(req)
+func (s *HTTPBranchService) CreateChangeRequest(employeeID string, req models.CreateBranchChangeRequest) (*models.BranchChangeRequestHistory, error) {
+	return s.client.CreateBranchChangeRequest(employeeID, req)
 }

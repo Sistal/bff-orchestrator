@@ -1,5 +1,11 @@
 package models
 
+// EmployeeIDResponse — respuesta del endpoint GET /api/v1/funcionarios/by-usuario/:id_usuario
+// Devuelto por ms-funcionario para resolver id_usuario → id_funcionario.
+type EmployeeIDResponse struct {
+	IDFuncionario int `json:"id_funcionario"`
+}
+
 // CargoRef — referencia a tabla cargo (JOIN)
 type CargoRef struct {
 	ID          int    `json:"id"`
@@ -74,6 +80,32 @@ type UpdatePreferencesRequest struct {
 // No existe en DDL; se reserva para futuras implementaciones.
 type UpdateSecurityRequest struct {
 	RecoveryEmail string `json:"recoveryEmail"`
+}
+
+// CreateEmployeeRequest — payload para crear un funcionario.
+type CreateEmployeeRequest struct {
+	UserID          int    `json:"user_id"` // Extraído del token (pero puede venir en body si es admin)
+	RutFuncionario  string `json:"rut_funcionario" binding:"required"`
+	Nombres         string `json:"nombres" binding:"required"`
+	ApellidoPaterno string `json:"apellido_paterno" binding:"required"`
+	ApellidoMaterno string `json:"apellido_materno" binding:"required"`
+	Email           string `json:"email" binding:"required"`
+	Celular         string `json:"celular" binding:"required"`
+	Telefono        string `json:"telefono"`
+	Direccion       string `json:"direccion" binding:"required"`
+	IDCargo         int    `json:"id_cargo" binding:"required"`
+	IDSucursal      int    `json:"id_sucursal" binding:"required"`
+}
+
+// CreateEmployeeRequestFromLogin — payload para crear un funcionario desde el login.
+type CreateEmployeeRequestFromLogin struct {
+	UserID          int    `json:"user_id"` // Extraído del token (pero puede venir en body si es admin)
+	RutFuncionario  string `json:"rut_funcionario" binding:"required"`
+	Nombres         string `json:"nombres" binding:"required"`
+	ApellidoPaterno string `json:"apellido_paterno" binding:"required"`
+	ApellidoMaterno string `json:"apellido_materno" binding:"required"`
+	Email           string `json:"email" binding:"required"`
+	Genero          int    `json:"genero" binding:"required"` // 1: Masculino, 2: Femenino
 }
 
 // HomeStats — estadísticas del dashboard agregadas desde Petición Uniforme y Despacho

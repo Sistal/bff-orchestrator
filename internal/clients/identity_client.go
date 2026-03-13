@@ -134,13 +134,17 @@ func (c *IdentityClient) ValidateToken(token string) (*models.AuthValidateRespon
 	}
 
 	return &models.AuthValidateResponse{
-		Valid:     true,
-		UserID:    vd.IDUsuario,
-		Username:  vd.NombreUsuario,
-		Role:      vd.IDRol,
-		RoleName:  vd.NombreRol,
-		IssuedAt:  vd.Iat,
-		ExpiresAt: vd.Exp,
+		Valid:          true,
+		UserID:         vd.IDUsuario,
+		Username:       vd.NombreUsuario,
+		NombreCompleto: vd.NombreCompleto,
+		RUT:            vd.RUT,
+		Role:           vd.IDRol,
+		RoleName:       vd.NombreRol,
+		EstadoID:       vd.IDEstadoUsuario,
+		EstadoName:     vd.NombreEstado,
+		IssuedAt:       vd.Iat,
+		ExpiresAt:      vd.Exp,
 	}, nil
 }
 
