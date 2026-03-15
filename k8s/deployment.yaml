@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bff-orchestrator
+  namespace: sistal
+  labels:
+    app: bff-orchestrator
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bff-orchestrator
+  template:
+    metadata:
+      labels:
+        app: bff-orchestrator
+    spec:
+      containers:
+      - name: bff-orchestrator
+        # El pipeline de GitHub Actions (Kustomize) actualizará este tag por el Commit SHA real
+        image: southamerica-east1-docker.pkg.dev/construtem/microservicios-construtem/bff-orchestrator:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080 # Puerto estándar de tu app Go
+        
+        # AQUÍ CONSUME EL CONFIGMAP MANUAL
+        envFrom:
+        - configMapRef:
+            name: bff-orchestrator-config
+            # optional: true # Descomenta esto si quieres que el pod inicie aunque el configmap no exista
+            
+        # Buenas prácticas: Límites de recursos
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+

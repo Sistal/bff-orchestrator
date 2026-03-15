@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    
+    # IMPORTANTE: Si tu app Go NO tiene programada la ruta "/ventas" internamente 
+    # (es decir, la app Go espera "/", pero en internet entras por "/ventas"), 
+    # necesitas descomentar la siguiente línea para que NGINX le quite el "/ventas" antes de enviar la petición:
+    # nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  tls:
+  - hosts:
+    - api.construtem.com # REEMPLAZA por tu dominio real
+    secretName: api-tls-cert # cert-manager creará este secret
+  rules:
+  - host: api.construtem.com # REEMPLAZA por tu dominio real
+    http:
+      paths:
+      # RUTA PARA EL MICROSERVICIO DE VENTAS
+      - path: /
+        # Si usas rewrite-target arriba, el path debe ser: /ventas(/|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: bff-orchestrator-svc # Apunta al Service definido arriba
+            port:
+              number: 80
+
+      # Ejemplo de cómo agregarías otro microservicio en el futuro:
+      # - path: /usuarios
+      #   pathType: Prefix
+      #   backend:
+      #     service:
+      #       name: back-usuarios-svc
+      #       port:
+      #         number: 80
