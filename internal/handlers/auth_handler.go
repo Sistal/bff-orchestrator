@@ -98,7 +98,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 				)
 
 				c.SetSameSite(http.SameSiteLaxMode)
-				c.SetCookie("access_token", loginData.Token, maxAge, "/", "", false, true)
+				c.SetCookie("access_token", loginData.Token, maxAge, "/", domain, false, true)
 
 				// ── DIAGNÓSTICO: confirmar Set-Cookie header enviado al browser ──
 				log.Debug("Login: Set-Cookie header enviado al browser",
@@ -388,7 +388,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 						zap.String("cookie_name", "access_token"),
 					)
 
-					c.SetSameSite(http.SameSiteNoneMode)
+					c.SetSameSite(http.SameSiteLaxMode)
 					c.SetCookie("access_token", tokenData.Token, maxAge, "/", domain, false, true)
 
 					log.Debug("Refresh: cookie access_token renovada correctamente",
