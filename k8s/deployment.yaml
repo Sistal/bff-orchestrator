@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
       - name: bff-orchestrator
-        # El pipeline de GitHub Actions (Kustomize) actualizará este tag por el Commit SHA real
-        image: southamerica-east1-docker.pkg.dev/construtem/microservicios-construtem/bff-orchestrator:latest
+        # El pipeline de GitHub Actions reemplazará este tag
+        image: us-east1-docker.pkg.dev/sistal-490016/sistal-docker-images/bff-orchestrator:IMAGE_PLACEHOLDER
         imagePullPolicy: Always
         ports:
         - containerPort: 8080 # Puerto estándar de tu app Go
