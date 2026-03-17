@@ -87,6 +87,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 					maxAge = cookieMaxAge()
 				}
 				domain := cookieDomain()
+				secureCookie := cookieSecure()
 
 				log.Info("Login: estableciendo cookie access_token",
 					zap.String("nombre_usuario", req.NombreUsuario),
@@ -95,10 +96,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 					zap.Int("max_age_seconds", maxAge),
 					zap.String("cookie_domain", domain),
 					zap.String("cookie_name", "access_token"),
+					zap.Bool("cookie_secure", secureCookie),
 				)
 
-				c.SetSameSite(http.SameSiteLaxMode)
-				c.SetCookie("access_token", loginData.Token, maxAge, "/", domain, false, true)
+				// SameSiteNoneMode es necesario para requests cross-origin (ej. frontend s-dev vs api-s-dev subdomains) con credentials
+				c.SetSameSite(http.SameSiteNoneMode)
+				c.SetCookie("access_token", loginData.Token, maxAge, "/", domain, secureCookie, true)
 
 				// ── DIAGNÓSTICO: confirmar Set-Cookie header enviado al browser ──
 				log.Debug("Login: Set-Cookie header enviado al browser",
@@ -374,6 +377,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 			var tokenData models.TokenResponseData
 			if err := json.Unmarshal(dataBytes, &tokenData); err == nil {
 				domain := cookieDomain()
+				secureCookie := cookieSecure()
 				if tokenData.Token != "" {
 					maxAge := tokenData.ExpiresIn
 					if maxAge <= 0 {
@@ -386,10 +390,11 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 						zap.Int("max_age_seconds", maxAge),
 						zap.String("cookie_domain", domain),
 						zap.String("cookie_name", "access_token"),
+						zap.Bool("cookie_secure", secureCookie),
 					)
 
-					c.SetSameSite(http.SameSiteLaxMode)
-					c.SetCookie("access_token", tokenData.Token, maxAge, "/", domain, false, true)
+					c.SetSameSite(http.SameSiteNoneMode)
+					c.SetCookie("access_token", tokenData.Token, maxAge, "/", domain, secureCookie, true)
 
 					log.Debug("Refresh: cookie access_token renovada correctamente",
 						zap.String("ip", ip),
@@ -405,10 +410,11 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 						zap.Int("max_age_seconds", refreshMaxAge),
 						zap.String("cookie_domain", domain),
 						zap.String("cookie_name", "refresh_token"),
+						zap.Bool("cookie_secure", secureCookie),
 					)
 
 					c.SetSameSite(http.SameSiteNoneMode)
-					c.SetCookie("refresh_token", *tokenData.RefreshToken, refreshMaxAge, "/", domain, false, true)
+					c.SetCookie("refresh_token", *tokenData.RefreshToken, refreshMaxAge, "/", domain, secureCookie, true)
 
 					log.Debug("Refresh: cookie refresh_token renovada correctamente",
 						zap.String("ip", ip),
@@ -507,17 +513,19 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	// Expirar ambas cookies independientemente del resultado del microservicio.
 	domain := cookieDomain()
+	secureCookie := cookieSecure()
 
 	log.Info("Logout: expirando cookies de sesión",
 		zap.String("user_id", userID),
 		zap.String("ip", ip),
 		zap.Strings("cookies", []string{"access_token", "refresh_token"}),
 		zap.String("cookie_domain", domain),
+		zap.Bool("cookie_secure", secureCookie),
 	)
 
 	c.SetSameSite(http.SameSiteNoneMode)
-	c.SetCookie("access_token", "", -1, "/", domain, false, true)
-	c.SetCookie("refresh_token", "", -1, "/", domain, false, true)
+	c.SetCookie("access_token", "", -1, "/", domain, secureCookie, true)
+	c.SetCookie("refresh_token", "", -1, "/", domain, secureCookie, true)
 
 	log.Debug("Logout: cookies access_token y refresh_token expiradas correctamente",
 		zap.String("user_id", userID),
@@ -941,6 +949,16 @@ func cookieDomain() string {
 		return d
 	}
 	return ""
+}
+
+// cookieSecure retorna true si se debe configurar la cookie como Secure.
+// Debería ser true en entornos productivos con HTTPS o si se fuerza con env var.
+func cookieSecure() bool {
+	if os.Getenv("ENVIRONMENT") == "production" || os.Getenv("COOKIE_SECURE") == "true" {
+		return true
+	}
+	// Permite false en entorno de desarrollo local sin HTTPS
+	return false 
 }
 
 // safeTokenPrefix retorna solo los primeros 10 caracteres del token para logs (evita exposición).
