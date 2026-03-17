@@ -22,4 +22,4 @@ spec:
           service:
             name: bff-orchestrator-svc # Apunta al Service definido arriba
             port:
-              number: 80
+              number: 8080
