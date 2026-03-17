@@ -100,8 +100,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 				)
 
 				// SameSiteNoneMode es necesario para requests cross-origin (ej. frontend s-dev vs api-s-dev subdomains) con credentials
-				c.SetSameSite(http.SameSiteNoneMode)
-				c.SetCookie("access_token", loginData.Token, maxAge, "/", domain, secureCookie, true)
+				c.SetSameSite(http.SameSiteLaxMode)
+				c.SetCookie("access_token", loginData.Token, maxAge, "/", "", false, true)
 
 				// ── DIAGNÓSTICO: confirmar Set-Cookie header enviado al browser ──
 				log.Debug("Login: Set-Cookie header enviado al browser",
@@ -449,6 +449,32 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 // @Success      200  {object}  models.APIResponse
 // @Failure      401  {object}  models.APIResponse
 // @Router       /api/v1/auth/me [get]
+func (h *AuthHandler) Status(c *gin.Context) {
+	log := logger.Get()
+	userIDStr, exists := c.Get("userID") // El middleware BearerAuthMiddleware lo guarda como "userID"
+	if !exists {
+		log.Warn("Status: Usuario no autenticado (falta userID en contexto)")
+		c.JSON(http.StatusUnauthorized, models.SimpleErrorResponse("Usuario no autenticado"))
+		return
+	}
+
+	userID, ok := userIDStr.(string)
+	if !ok || userID == "" {
+		log.Warn("Status: userID inválido o vacío en contexto", zap.Any("userID_raw", userIDStr))
+		c.JSON(http.StatusUnauthorized, models.SimpleErrorResponse("Token inválido o sin información de usuario"))
+		return
+	}
+
+	code, resp, err := h.service.Status(userID)
+	if err != nil {
+		log.Error("Status: error al verificar estado del perfil", zap.String("userID", userID), zap.Error(err))
+		c.JSON(http.StatusInternalServerError, models.SimpleErrorResponse("Error interno del servidor"))
+		return
+	}
+
+	c.JSON(code, resp)
+}
+
 func (h *AuthHandler) GetMe(c *gin.Context) {
 	log := logger.Get()
 	userID := c.GetString("userID")
@@ -958,7 +984,7 @@ func cookieSecure() bool {
 		return true
 	}
 	// Permite false en entorno de desarrollo local sin HTTPS
-	return false 
+	return false
 }
 
 // safeTokenPrefix retorna solo los primeros 10 caracteres del token para logs (evita exposición).

@@ -134,6 +134,7 @@ func main() {
 	{
 		// Auth — rutas protegidas
 		api.GET("/api/v1/auth/me", authHandler.GetMe)
+		api.GET("/api/v1/auth/status", authHandler.Status)
 		api.POST("/api/v1/auth/logout", authHandler.Logout)
 		api.PUT("/api/v1/auth/change-password", authHandler.ChangePassword)
 		api.GET("/api/v1/auth/roles", authHandler.GetRoles)

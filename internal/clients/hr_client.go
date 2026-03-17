@@ -34,18 +34,31 @@ func NewHRClient() *HRClient {
 // Es llamado por el BearerAuthMiddleware en cada request autenticado.
 // DEUDA TÉCNICA: considerar caché con TTL para reducir latencia.
 func (c *HRClient) GetEmployeeByUserID(userID string) (int, error) {
+	resp, err := c.GetFullEmployeeByUserID(userID)
+	if err != nil {
+		return 0, err
+	}
+	if resp == nil {
+		return 0, nil
+	}
+	return resp.IDFuncionario, nil
+}
+
+// GetFullEmployeeByUserID devuelve el registro completo del funcionario usando su id usuario
+// consultando el mismo endpoint. Útil para validar requerimientos de completitud de datos.
+func (c *HRClient) GetFullEmployeeByUserID(userID string) (*models.EmployeeIDResponse, error) {
 	resp, err := c.Client.Get(fmt.Sprintf("%s/api/v1/funcionarios/by-usuario/%s", c.BaseURL, userID))
 	if err != nil {
-		return 0, fmt.Errorf("hr_client: error al contactar ms-funcionario: %w", err)
+		return nil, fmt.Errorf("hr_client: error al contactar ms-funcionario: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return 0, nil // usuario sin funcionario asociado (admin puro)
+		return nil, nil // usuario sin funcionario asociado (admin puro)
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return 0, fmt.Errorf("hr_client: GetEmployeeByUserID status %d: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("hr_client: GetEmployeeByUserID status %d: %s", resp.StatusCode, string(body))
 	}
 
 	// Estructura para manejar el envelope { "success": true, "data": { "id_funcionario": ... } }
@@ -55,9 +68,9 @@ func (c *HRClient) GetEmployeeByUserID(userID string) (int, error) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {
-		return 0, fmt.Errorf("hr_client: error al decodificar respuesta: %w", err)
+		return nil, fmt.Errorf("hr_client: error al decodificar respuesta: %w", err)
 	}
-	return envelope.Data.IDFuncionario, nil
+	return &envelope.Data, nil
 }
 
 func (c *HRClient) GetEmployeeProfile(id string) (*models.EmployeeProfile, error) {

@@ -21,6 +21,7 @@ type AuthService interface {
 
 	// Protegidos (requieren JWT)
 	GetMe(token string) (int, *models.APIResponse, error)
+	Status(userID string) (int, *models.APIResponse, error)
 	Logout(token string) (int, *models.APIResponse, error)
 	ChangePassword(token string, req *models.ChangePasswordRequest) (int, *models.APIResponse, error)
 	GetRoles(token string, activosSolo *bool) (int, *models.APIResponse, error)
@@ -158,6 +159,39 @@ func (s *HTTPAuthService) Refresh(refreshToken string) (int, *models.APIResponse
 	return s.client.Refresh(map[string]string{
 		"refresh_token": refreshToken,
 	})
+}
+
+func (s *HTTPAuthService) Status(userID string) (int, *models.APIResponse, error) {
+	log := logger.Get()
+	hrSvc, ok := s.employeeService.(*HTTPEmployeeService)
+	var empDetail *models.EmployeeIDResponse
+	var err error
+
+	if ok && hrSvc.GetHRClient() != nil {
+		empDetail, err = hrSvc.GetHRClient().GetFullEmployeeByUserID(userID)
+	} else {
+		// Fallback por si no podemos acceder al HRClient (aunque deberíamos)
+		return http.StatusInternalServerError, &models.APIResponse{Success: false, Message: "Error interno: cliente HR no disponible"}, nil
+	}
+
+	if err != nil {
+		log.Error("Status: error obtaining full employee", zap.Error(err))
+		return http.StatusInternalServerError, &models.APIResponse{Success: false, Message: "Error al obtener perfil del funcionario"}, nil
+	}
+
+	requiereRegistro := false
+	if empDetail == nil {
+		requiereRegistro = true
+	} else if empDetail.IDSegmento == 0 || empDetail.IDEmpresaCliente == 0 || empDetail.Sucursal == nil || empDetail.Sucursal.ID == 0 {
+		requiereRegistro = true
+	}
+
+	return http.StatusOK, &models.APIResponse{
+		Success: true,
+		Data: map[string]interface{}{
+			"requiere_registro": requiereRegistro,
+		},
+	}, nil
 }
 
 func (s *HTTPAuthService) GetMe(token string) (int, *models.APIResponse, error) {

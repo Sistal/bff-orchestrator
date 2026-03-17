@@ -37,6 +37,11 @@ func NewHTTPEmployeeService(hr *clients.HRClient, ops *clients.OpsClient) Employ
 	return &HTTPEmployeeService{hrClient: hr, opsClient: ops}
 }
 
+// GetHRClient permite exponer el cliente a otros servicios del mismo paquete
+func (s *HTTPEmployeeService) GetHRClient() *clients.HRClient {
+	return s.hrClient
+}
+
 func (s *HTTPEmployeeService) GetProfile(id string) (*models.EmployeeProfile, error) {
 	log := logger.Get()
 	log.Debug("EmployeeService.GetProfile: Consultando perfil", zap.String("id", id))

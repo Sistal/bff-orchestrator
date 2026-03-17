@@ -1,9 +1,30 @@
 package models
 
 // EmployeeIDResponse — respuesta del endpoint GET /api/v1/funcionarios/by-usuario/:id_usuario
-// Devuelto por ms-funcionario para resolver id_usuario → id_funcionario.
+// Devuelto por ms-funcionario para obtener el registro de un funcionario, y poder resolver
+// si tiene completos sus datos mediante el endpoint de auth/status.
 type EmployeeIDResponse struct {
-	IDFuncionario int `json:"id_funcionario"`
+	IDFuncionario     int          `json:"id_funcionario"`
+	RutFuncionario    string       `json:"rut_funcionario"`
+	Nombres           string       `json:"nombres"`
+	ApellidoPaterno   string       `json:"apellido_paterno"`
+	ApellidoMaterno   string       `json:"apellido_materno"`
+	NombreCompleto    string       `json:"nombre_completo"`
+	Celular           string       `json:"celular"`
+	Telefono          string       `json:"telefono"`
+	Email             string       `json:"email"`
+	TallasRegistradas bool         `json:"tallas_registradas"`
+	Direccion         string       `json:"direccion"`
+	FechaCreacion     string       `json:"fecha_creacion"`
+	FechaModificacion string       `json:"fecha_modificacion"`
+	Genero            interface{}  `json:"genero"`
+	Medidas           interface{}  `json:"medidas"`
+	Usuario           interface{}  `json:"usuario"`
+	Estado            *EstadoRef   `json:"estado"`
+	Sucursal          *SucursalRef `json:"sucursal"`
+	Cargo             *CargoRef    `json:"cargo"`
+	IDEmpresaCliente  int          `json:"id_empresa_cliente"`
+	IDSegmento        int          `json:"id_segmento"`
 }
 
 // CargoRef — referencia a tabla cargo (JOIN)
@@ -15,7 +36,7 @@ type CargoRef struct {
 // SucursalRef — referencia a tabla Sucursal (JOIN)
 // NOTA: el DDL no tiene columna "region"; se usa direccion para contexto geográfico.
 type SucursalRef struct {
-	ID             int    `json:"id"`
+	ID             int    `json:"id_sucursal"`
 	NombreSucursal string `json:"nombre_sucursal"`
 	Direccion      string `json:"direccion"`
 }
