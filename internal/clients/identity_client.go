@@ -10,7 +10,9 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/Sistal/bff-orchestrator/internal/logger"
 	"github.com/Sistal/bff-orchestrator/internal/models"
+	"go.uber.org/zap"
 )
 
 type IdentityClient struct {
@@ -150,13 +152,27 @@ func (c *IdentityClient) ValidateToken(token string) (*models.AuthValidateRespon
 
 // ValidateTokenRaw llama GET /api/v1/auth/validate y retorna el APIResponse completo.
 func (c *IdentityClient) ValidateTokenRaw(token string) (int, *models.APIResponse, error) {
-	req, err := http.NewRequest("GET", c.BaseURL+"/api/v1/auth/validate", nil)
+	log := logger.Get()
+	fullURL := c.BaseURL + "/api/v1/auth/validate"
+
+	log.Info("IdentityClient: Validando token (Raw)", zap.String("url", fullURL))
+
+	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
+		log.Error("IdentityClient: Error creando request de validación", zap.Error(err), zap.String("url", fullURL))
 		return 0, nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
+
 	var result models.APIResponse
 	code, err := c.doJSON(req, &result)
+
+	if err != nil {
+		log.Error("IdentityClient: Error en validación de token", zap.Error(err), zap.String("url", fullURL))
+	} else {
+		log.Info("IdentityClient: Validación completada", zap.Int("status", code), zap.Bool("success", result.Success), zap.String("url", fullURL))
+	}
+
 	return code, &result, err
 }
 

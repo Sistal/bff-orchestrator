@@ -11,6 +11,9 @@ type CatalogService interface {
 	GetGarmentTypes() ([]models.CatalogItem, error)
 	GetActiveCampaign() (*models.Campaign, error)
 	GetMasterData() (*models.MasterDataResponse, error)
+	GetCompanies() ([]models.Empresa, error)
+	GetSegments(companyID int) ([]models.Segmento, error)
+	GetBranches(companyID int) ([]models.Sucursal, error)
 }
 
 type MockCatalogService struct{}
@@ -64,6 +67,18 @@ func (s *MockCatalogService) GetMasterData() (*models.MasterDataResponse, error)
 	}, nil
 }
 
+func (s *MockCatalogService) GetCompanies() ([]models.Empresa, error) {
+	return []models.Empresa{}, nil
+}
+
+func (s *MockCatalogService) GetSegments(companyID int) ([]models.Segmento, error) {
+	return []models.Segmento{}, nil
+}
+
+func (s *MockCatalogService) GetBranches(companyID int) ([]models.Sucursal, error) {
+	return []models.Sucursal{}, nil
+}
+
 type HTTPCatalogService struct {
 	client *clients.CatalogClient
 }
@@ -106,4 +121,16 @@ func (s *HTTPCatalogService) GetActiveCampaign() (*models.Campaign, error) {
 
 func (s *HTTPCatalogService) GetMasterData() (*models.MasterDataResponse, error) {
 	return s.client.GetMasterData()
+}
+
+func (s *HTTPCatalogService) GetCompanies() ([]models.Empresa, error) {
+	return s.client.GetCompanies()
+}
+
+func (s *HTTPCatalogService) GetSegments(companyID int) ([]models.Segmento, error) {
+	return s.client.GetSegments(companyID)
+}
+
+func (s *HTTPCatalogService) GetBranches(companyID int) ([]models.Sucursal, error) {
+	return s.client.GetBranches(companyID)
 }

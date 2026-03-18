@@ -315,3 +315,28 @@ func (c *HRClient) CreateEmployeeFromLogin(req models.CreateEmployeeRequestFromL
 	}
 	return &newEmployee, nil
 }
+
+func (c *HRClient) UpdateEmployee(id string, body interface{}) error {
+	reqBody, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request body: %w", err)
+	}
+
+	reqHTTP, err := http.NewRequest("PUT", fmt.Sprintf("%s/api/v1/funcionarios/%s", c.BaseURL, id), bytes.NewBuffer(reqBody))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	reqHTTP.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.Client.Do(reqHTTP)
+	if err != nil {
+		return fmt.Errorf("failed to perform request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to update employee: %d", resp.StatusCode)
+	}
+
+	return nil
+}

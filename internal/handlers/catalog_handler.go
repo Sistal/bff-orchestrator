@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/Sistal/bff-orchestrator/internal/logger"
 	"github.com/Sistal/bff-orchestrator/internal/services"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type CatalogHandler struct {
@@ -84,5 +87,97 @@ func (h *CatalogHandler) GetActiveCampaign(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
 	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// GetCompanies godoc
+// @Summary      Get companies
+// @Description  Get all available companies
+// @Tags         catalog
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200  {object}  []models.Empresa
+// @Failure      500  {object}  map[string]string
+// @Router       /api/v1/empresas [get]
+func (h *CatalogHandler) GetCompanies(c *gin.Context) {
+	log := logger.Get()
+	log.Info("GetCompanies: Request recibida", zap.String("ip", c.ClientIP()))
+
+	resp, err := h.service.GetCompanies()
+	if err != nil {
+		log.Error("GetCompanies: Error obteniendo empresas", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
+		return
+	}
+
+	log.Info("GetCompanies: Request procesada con éxito", zap.Int("count", len(resp)))
+	c.JSON(http.StatusOK, resp)
+}
+
+// GetSegments godoc
+// @Summary      Get segments
+// @Description  Get segments for a company
+// @Tags         catalog
+// @Security     BearerAuth
+// @Produce      json
+// @Param        idEmpresa path int true "Company ID"
+// @Success      200  {object}  []models.Segmento
+// @Failure      400  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /api/v1/segmentos/{idEmpresa} [get]
+func (h *CatalogHandler) GetSegments(c *gin.Context) {
+	log := logger.Get()
+	idStr := c.Param("idEmpresa")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Warn("GetSegments: ID de empresa inválido", zap.String("id_param", idStr), zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Company ID"})
+		return
+	}
+
+	log.Info("GetSegments: Request recibida", zap.Int("id_empresa", id), zap.String("ip", c.ClientIP()))
+
+	resp, err := h.service.GetSegments(id)
+	if err != nil {
+		log.Error("GetSegments: Error obteniendo segmentos", zap.Int("id_empresa", id), zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
+		return
+	}
+
+	log.Info("GetSegments: Request procesada con éxito", zap.Int("id_empresa", id), zap.Int("count", len(resp)))
+	c.JSON(http.StatusOK, resp)
+}
+
+// GetBranches godoc
+// @Summary      Get branches
+// @Description  Get branches for a company
+// @Tags         catalog
+// @Security     BearerAuth
+// @Produce      json
+// @Param        idEmpresa path int true "Company ID"
+// @Success      200  {object}  []models.Sucursal
+// @Failure      400  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /api/v1/sucursales/{idEmpresa} [get]
+func (h *CatalogHandler) GetBranches(c *gin.Context) {
+	log := logger.Get()
+	idStr := c.Param("idEmpresa")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Warn("GetBranches: ID de empresa inválido", zap.String("id_param", idStr), zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Company ID"})
+		return
+	}
+
+	log.Info("GetBranches: Request recibida", zap.Int("id_empresa", id), zap.String("ip", c.ClientIP()))
+
+	resp, err := h.service.GetBranches(id)
+	if err != nil {
+		log.Error("GetBranches: Error obteniendo sucursales", zap.Int("id_empresa", id), zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
+		return
+	}
+
+	log.Info("GetBranches: Request procesada con éxito", zap.Int("id_empresa", id), zap.Int("count", len(resp)))
 	c.JSON(http.StatusOK, resp)
 }

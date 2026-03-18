@@ -25,6 +25,8 @@ type EmployeeService interface {
 	GetActivity(id string) ([]models.ActivityLog, error)
 	// GetEmployeeByUserID obtiene el ID del funcionario asociado a un usuario
 	GetEmployeeByUserID(userID string) (int, error)
+	// InitialRegister actualiza los datos del funcionario para el registro inicial
+	InitialRegister(employeeID string, req interface{}) error
 }
 
 // HTTPEmployeeService — implementación real que delega al ms-funcionario
@@ -95,4 +97,8 @@ func (s *HTTPEmployeeService) GetActivity(id string) ([]models.ActivityLog, erro
 
 func (s *HTTPEmployeeService) GetEmployeeByUserID(userID string) (int, error) {
 	return s.hrClient.GetEmployeeByUserID(userID)
+}
+
+func (s *HTTPEmployeeService) InitialRegister(employeeID string, req interface{}) error {
+	return s.hrClient.UpdateEmployee(employeeID, req)
 }

@@ -364,6 +364,40 @@ func (h *EmployeeHandler) CreateEmployee(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+// InitialRegister godoc
+// @Summary      Initial register update for employee
+// @Description  Update employee data for initial registration using data from body. Resolves employee ID from token.
+// @Tags         employees
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      object  true  "Employee update data"
+// @Success      200      {object}  map[string]string
+// @Failure      400      {object}  models.ErrorResponse
+// @Failure      401      {object}  models.ErrorResponse
+// @Failure      500      {object}  models.ErrorResponse
+// @Router       /api/v1/funcionarios/registro-inicial [post]
+func (h *EmployeeHandler) InitialRegister(c *gin.Context) {
+	employeeID, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		return
+	}
+
+	var req interface{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
+		return
+	}
+
+	err := h.service.InitialRegister(employeeID, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Registro inicial completado exitosamente"})
+}
+
 // requireEmployeeByUserId extrae el userID del contexto y consulta al servicio para obtener el employeeID.
 // Reemplaza la lógica anterior que dependía del middleware para poblar "employeeID".
 func (h *EmployeeHandler) requireEmployeeByUserId(c *gin.Context) (string, bool) {

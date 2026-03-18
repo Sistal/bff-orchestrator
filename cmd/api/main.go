@@ -151,6 +151,11 @@ func main() {
 		api.GET("/catalogo/prenda-tipos", catalogHandler.GetGarmentTypes)
 		api.GET("/campanas/activa", catalogHandler.GetActiveCampaign)
 
+		// Catalog (Nuevos Endpoints)
+		api.GET("/api/v1/empresas", catalogHandler.GetCompanies)
+		api.GET("/api/v1/empresas/segmentos/:idEmpresa", catalogHandler.GetSegments)
+		api.GET("/api/v1/empresas/sucursales/:idEmpresa", catalogHandler.GetBranches)
+
 		// Branches
 		api.GET("/sucursales", branchHandler.GetAllBranches)
 		api.GET("/solicitudes/cambio-sucursal/historial", branchHandler.GetChangeHistory)
@@ -188,6 +193,9 @@ func main() {
 				funcionarios.PUT("/me/seguridad", employeeHandler.UpdateSecurity)
 				funcionarios.GET("/me/stats", employeeHandler.GetStats)
 				funcionarios.GET("/me/actividad", employeeHandler.GetActivity)
+
+				// Registro Inicial
+				funcionarios.POST("/registro-inicial", employeeHandler.InitialRegister)
 
 				// Ruta estática /filter — ANTES que /:id
 				funcionarios.GET("/filter", employeeHandler.FilterEmployees)
