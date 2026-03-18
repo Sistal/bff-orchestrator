@@ -200,7 +200,12 @@ func (h *EmployeeHandler) GetActivity(c *gin.Context) {
 // @Failure      500  {object}  models.ErrorResponse
 // @Router       /api/v1/funcionarios/{id}/medidas [get]
 func (h *EmployeeHandler) GetMeasurements(c *gin.Context) {
-	id := c.Param("id")
+	// Se extrae el id_funcionario desde el userID del token, ignorando el param :id
+	id, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		return
+	}
+
 	resp, err := h.service.GetMeasurements(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
