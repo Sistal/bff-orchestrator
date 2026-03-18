@@ -100,7 +100,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 				)
 
 				// SameSiteNoneMode es necesario para requests cross-origin (ej. frontend s-dev vs api-s-dev subdomains) con credentials
-				c.SetSameSite(http.SameSiteStrictMode)
+				c.SetSameSite(http.SameSiteNoneMode)
 				c.SetCookie("access_token", loginData.Token, maxAge, "/", domain, secureCookie, true)
 
 				// ── DIAGNÓSTICO: confirmar Set-Cookie header enviado al browser ──
