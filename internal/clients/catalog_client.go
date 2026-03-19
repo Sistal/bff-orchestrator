@@ -125,3 +125,30 @@ func (c *CatalogClient) GetBranches(companyID int) ([]models.Sucursal, error) {
 	log.Info("CatalogClient: Sucursales obtenidas exitosamente", zap.Int("count", len(result.Data)), zap.Int("company_id", companyID), zap.String("url", url))
 	return result.Data, nil
 }
+
+func (c *CatalogClient) GetUniformsBySegment(segmentID int) ([]models.Uniform, error) {
+	log := logger.Get()
+	url := fmt.Sprintf("%s/api/v1/segmentos/%d/uniformes", c.BaseURL, segmentID)
+	log.Info("CatalogClient: Solicitando uniformes por segmento", zap.Int("segmentID", segmentID), zap.String("url", url))
+
+	resp, err := c.Client.Get(url)
+	if err != nil {
+		log.Error("CatalogClient: Error al solicitar uniformes", zap.Error(err), zap.Int("segmentID", segmentID))
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Warn("CatalogClient: Respuesta fallida al obtener uniformes", zap.Int("status", resp.StatusCode), zap.Int("segmentID", segmentID))
+		return nil, fmt.Errorf("failed to get uniforms: %d", resp.StatusCode)
+	}
+
+	var result models.CatalogResponse[models.Uniform]
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		log.Error("CatalogClient: Error decodificando respuesta de uniformes", zap.Error(err))
+		return nil, err
+	}
+
+	log.Info("CatalogClient: Uniformes obtenidos exitosamente", zap.Int("count", len(result.Data)), zap.Int("segmentID", segmentID))
+	return result.Data, nil
+}

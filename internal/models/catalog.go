@@ -59,3 +59,12 @@ type CatalogResponse[T any] struct {
 	Data    []T   `json:"data"`
 	Meta    *Meta `json:"meta,omitempty"`
 }
+
+type Uniform struct {
+	ID          int    `json:"id_uniforme"`
+	Nombre      string `json:"nombre_prenda"`
+	Descripcion string `json:"descripcion"`
+	Tipo        string `json:"tipo_prenda"`
+	Genero      string `json:"genero"`
+	ImagenURL   string `json:"imagen_url,omitempty"`
+}

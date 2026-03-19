@@ -5,17 +5,19 @@ import (
 	"strconv"
 
 	"github.com/Sistal/bff-orchestrator/internal/logger"
+	"github.com/Sistal/bff-orchestrator/internal/models"
 	"github.com/Sistal/bff-orchestrator/internal/services"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type CatalogHandler struct {
-	service services.CatalogService
+	service         services.CatalogService
+	employeeService services.EmployeeService
 }
 
-func NewCatalogHandler(s services.CatalogService) *CatalogHandler {
-	return &CatalogHandler{service: s}
+func NewCatalogHandler(s services.CatalogService, es services.EmployeeService) *CatalogHandler {
+	return &CatalogHandler{service: s, employeeService: es}
 }
 
 // GetSizes godoc
@@ -179,5 +181,46 @@ func (h *CatalogHandler) GetBranches(c *gin.Context) {
 	}
 
 	log.Info("GetBranches: Request procesada con éxito", zap.Int("id_empresa", id), zap.Int("count", len(resp)))
-	c.JSON(http.StatusOK, resp)
+	req := models.CatalogResponse[models.Sucursal]{
+		Success: true,
+		Data:    resp,
+	}
+	c.JSON(http.StatusOK, req)
+}
+
+// GetUniforms godoc
+// @Summary      Get uniforms by segment
+// @Description  Get uniforms available for the authenticated employee's segment
+// @Tags         catalog
+// @Security     BearerAuth
+// @Produce      json
+// @Success      200  {object}  models.CatalogResponse[models.Uniform]
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /catalogo/uniformes [get]
+func (h *CatalogHandler) GetUniforms(c *gin.Context) {
+	employeeIDStr, ok := requireEmployeeID(c)
+	if !ok {
+		return
+	}
+
+	// Obtener perfil para conocer el segmento
+	profile, err := h.employeeService.GetProfile(employeeIDStr)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": "Failed to get employee profile"})
+		return
+	}
+
+	// Consultar ms-catalogo con el ID de segmento
+	data, err := h.service.GetUniformsBySegment(profile.IDSegmento)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
+		return
+	}
+
+	req := models.CatalogResponse[models.Uniform]{
+		Success: true,
+		Data:    data,
+	}
+	c.JSON(http.StatusOK, req)
 }

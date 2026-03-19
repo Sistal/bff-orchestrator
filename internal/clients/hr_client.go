@@ -90,13 +90,36 @@ func (c *HRClient) GetEmployeeProfile(id string) (*models.EmployeeProfile, error
 		return nil, fmt.Errorf("failed to get employee profile: %d", resp.StatusCode)
 	}
 
+	// El ms-funcionario suele devolver { "success": true, "data": { ... } }
+	// Antes intentábamos decodificar directamente en EmployeeProfile, lo que falla si existe el envelope.
+	var envelope struct {
+		Success bool                   `json:"success"`
+		Data    models.EmployeeProfile `json:"data"`
+	}
+
+	// Primero intentamos decodificar como envelope
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	// Restaurar body para reintentos si fuera necesario (aunque io.ReadAll consume todo)
+	resp.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	if err := json.NewDecoder(bytes.NewBuffer(bodyBytes)).Decode(&envelope); err == nil && envelope.Data.ID != 0 {
+		// Log para confirmar que se detectó envelope
+		log.Debug("HRClient.GetEmployeeProfile: Envelope detectado", zap.Int("id_segmento", envelope.Data.IDSegmento))
+		return &envelope.Data, nil
+	}
+
+	// Si no tiene estructura envelope o Data está vacío, intentamos decodificar directo (fallback)
+	// Esto cubre ambos casos: respuesta directa o respuesta con envelope
 	var profile models.EmployeeProfile
-	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
+	if err := json.NewDecoder(bytes.NewBuffer(bodyBytes)).Decode(&profile); err != nil {
 		log.Error("HRClient.GetEmployeeProfile: Error decodificando respuesta", zap.String("id", id), zap.Error(err))
 		return nil, err
 	}
 
-	log.Debug("HRClient.GetEmployeeProfile: Perfil obtenido exitosamente", zap.String("id", id))
+	log.Debug("HRClient.GetEmployeeProfile: Perfil obtenido (modo directo)",
+		zap.String("id", id),
+		zap.Int("id_segmento", profile.IDSegmento),
+	)
 	return &profile, nil
 }
 
@@ -128,11 +151,14 @@ func (c *HRClient) GetMeasurements(id string) (*models.BodyMeasurements, error) 
 		return nil, fmt.Errorf("failed to get measurements: %d", resp.StatusCode)
 	}
 
-	var m models.BodyMeasurements
-	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+	var envelope struct {
+		Success bool                    `json:"success"`
+		Data    models.BodyMeasurements `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {
 		return nil, err
 	}
-	return &m, nil
+	return &envelope.Data, nil
 }
 
 func (c *HRClient) RegisterMeasurements(id string, req models.BodyMeasurements) (*models.BodyMeasurements, error) {
@@ -150,11 +176,14 @@ func (c *HRClient) RegisterMeasurements(id string, req models.BodyMeasurements) 
 		return nil, fmt.Errorf("failed to register measurements: %d", resp.StatusCode)
 	}
 
-	var m models.BodyMeasurements
-	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+	var envelope struct {
+		Success bool                    `json:"success"`
+		Data    models.BodyMeasurements `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {
 		return nil, err
 	}
-	return &m, nil
+	return &envelope.Data, nil
 }
 
 func (c *HRClient) UpdateMeasurements(id string, req models.BodyMeasurements) (*models.BodyMeasurements, error) {
@@ -172,11 +201,14 @@ func (c *HRClient) UpdateMeasurements(id string, req models.BodyMeasurements) (*
 		return nil, fmt.Errorf("failed to update measurements: %d", resp.StatusCode)
 	}
 
-	var m models.BodyMeasurements
-	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+	var envelope struct {
+		Success bool                    `json:"success"`
+		Data    models.BodyMeasurements `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&envelope); err != nil {
 		return nil, err
 	}
-	return &m, nil
+	return &envelope.Data, nil
 }
 
 func (c *HRClient) UpdateSecurity(id string, req models.UpdateSecurityRequest) error {

@@ -103,6 +103,37 @@ func (h *RequestHandler) CreateReplenishmentRequest(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
+// CreateUniformRequest godoc
+// @Summary      Create uniform request
+// @Description  Create a new uniform request for the authenticated employee
+// @Tags         requests
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      models.CreateUniformRequest  true  "Uniform request"
+// @Success      201      {object}  map[string]interface{}
+// @Failure      400      {object}  map[string]string
+// @Failure      401      {object}  map[string]string
+// @Failure      500      {object}  map[string]string
+// @Router       /solicitudes/uniforme [post]
+func (h *RequestHandler) CreateUniformRequest(c *gin.Context) {
+	employeeID, ok := requireEmployeeID(c)
+	if !ok {
+		return
+	}
+	var req models.CreateUniformRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
+		return
+	}
+	resp, err := h.service.CreateUniformRequest(employeeID, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, resp)
+}
+
 // CreateGarmentChangeRequest godoc
 // @Summary      Create garment change request
 // @Description  Create a new garment change request for the authenticated employee

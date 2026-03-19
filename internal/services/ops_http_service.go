@@ -35,6 +35,10 @@ func (s *HTTPOpsService) CreateGarmentChangeRequest(userID string, req models.Cr
 	return s.client.CreateGarmentChangeRequest(userID, req)
 }
 
+func (s *HTTPOpsService) CreateUniformRequest(userID string, req models.CreateUniformRequest) (*models.RequestSummary, error) {
+	return s.client.CreateUniformRequest(userID, req)
+}
+
 func (s *HTTPOpsService) UploadFile(userID string, file *multipart.FileHeader) (*models.FileUploadResponse, error) {
 	return s.client.UploadFile(userID, file)
 }

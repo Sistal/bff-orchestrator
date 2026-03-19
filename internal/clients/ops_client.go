@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 
 	"github.com/Sistal/bff-orchestrator/internal/models"
 )
@@ -87,11 +89,28 @@ func (c *OpsClient) GetRecentRequests(employeeID string) ([]models.RequestSummar
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get recent requests: %d", resp.StatusCode)
 	}
-	var requests []models.RequestSummary
-	if err := json.NewDecoder(resp.Body).Decode(&requests); err != nil {
-		return nil, err
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
-	return requests, nil
+
+	// 1. Intentar decodificar como Envelope
+	var envelope struct {
+		Success bool                    `json:"success"`
+		Data    []models.RequestSummary `json:"data"`
+	}
+	if err := json.Unmarshal(bodyBytes, &envelope); err == nil {
+		return envelope.Data, nil
+	}
+
+	// 2. Intentar decodificar como Array directo
+	var requests []models.RequestSummary
+	if err := json.Unmarshal(bodyBytes, &requests); err == nil {
+		return requests, nil
+	}
+
+	return nil, fmt.Errorf("failed to decode response as envelope or array")
 }
 
 func (c *OpsClient) CreateReplenishmentRequest(employeeID string, req models.CreateReplenishmentRequest) (*models.RequestSummary, error) {
@@ -127,6 +146,46 @@ func (c *OpsClient) CreateGarmentChangeRequest(employeeID string, req models.Cre
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to create garment change: %d", resp.StatusCode)
 	}
+	var created models.RequestSummary
+	if err := json.NewDecoder(resp.Body).Decode(&created); err != nil {
+		return nil, err
+	}
+	return &created, nil
+}
+
+func (c *OpsClient) CreateUniformRequest(employeeID string, req models.CreateUniformRequest) (*models.RequestSummary, error) {
+	// Convertir employeeID a int
+	id, err := strconv.Atoi(employeeID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid employee ID (must be int): %v", err)
+	}
+
+	// Payload enriquecido con el id_funcionario
+	payload := struct {
+		models.CreateUniformRequest
+		IDFuncionario int `json:"id_funcionario"`
+	}{
+		CreateUniformRequest: req,
+		IDFuncionario:        id,
+	}
+
+	body, _ := json.Marshal(payload)
+	reqHTTP, _ := http.NewRequest("POST", fmt.Sprintf("%s/api/v1/peticiones/uniforme", c.BaseURL), bytes.NewBuffer(body))
+	reqHTTP.Header.Set("Content-Type", "application/json")
+	// Se envía también en header por compatibilidad con otros endpoints,
+	// pero el body lleva el dato persitible.
+	reqHTTP.Header.Set("X-User-ID", employeeID)
+
+	resp, err := c.Client.Do(reqHTTP)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to create uniform request: %d", resp.StatusCode)
+	}
+
 	var created models.RequestSummary
 	if err := json.NewDecoder(resp.Body).Decode(&created); err != nil {
 		return nil, err

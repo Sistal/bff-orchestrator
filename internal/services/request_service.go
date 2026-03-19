@@ -12,6 +12,7 @@ type RequestService interface {
 	GetRecentRequests(userID string) ([]models.RequestSummary, error)
 	CreateReplenishmentRequest(userID string, req models.CreateReplenishmentRequest) (*models.RequestSummary, error)
 	CreateGarmentChangeRequest(userID string, req models.CreateGarmentChangeRequest) (*models.RequestSummary, error)
+	CreateUniformRequest(userID string, req models.CreateUniformRequest) (*models.RequestSummary, error)
 	UploadFile(userID string, file *multipart.FileHeader) (*models.FileUploadResponse, error)
 }
 
@@ -70,13 +71,15 @@ func (s *MockRequestService) CreateReplenishmentRequest(userID string, req model
 }
 
 func (s *MockRequestService) CreateGarmentChangeRequest(userID string, req models.CreateGarmentChangeRequest) (*models.RequestSummary, error) {
+	return &models.RequestSummary{}, nil
+}
+
+func (s *MockRequestService) CreateUniformRequest(userID string, req models.CreateUniformRequest) (*models.RequestSummary, error) {
 	return &models.RequestSummary{
-		ID:     "SOL-NEW-002",
-		Tipo:   "Cambio de Talla",
-		Fecha:  "2026-02-04",
-		Estado: "Creado",
-		Items:  []string{req.Prenda},
-		Motivo: req.Reason,
+		ID:     "SOL-NUEVA",
+		Tipo:   "Uniforme",
+		Fecha:  "2025-01-01",
+		Estado: "Pendiente",
 	}, nil
 }
 

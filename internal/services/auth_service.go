@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/Sistal/bff-orchestrator/internal/clients"
 	"github.com/Sistal/bff-orchestrator/internal/logger"
@@ -186,10 +188,37 @@ func (s *HTTPAuthService) Status(userID string) (int, *models.APIResponse, error
 		requiereRegistro = true
 	}
 
+	requiereMedidas := false
+	// Solo validamos medidas si el usuario ya tiene su registro base completo
+	if !requiereRegistro {
+		empIDStr := strconv.Itoa(empDetail.IDFuncionario)
+		measurements, errM := s.employeeService.GetMeasurements(empIDStr)
+
+		// Si hay error (ej. 404 Not Found porque no tiene medidas) o el objeto es nil
+		if errM != nil || measurements == nil {
+			// Si el error es un 404 (común si no existen), logueamos como debug/info, sino warn.
+			// Como el cliente devuelve un error formateado, comprobamos string.
+			if errM != nil && !strings.Contains(errM.Error(), "404") {
+				log.Warn("Status: Error al consultar medidas del funcionario", zap.Error(errM))
+			}
+			requiereMedidas = true
+		} else {
+			// Validar que tenga todas las medidas > 0
+			if measurements.EstaturaM <= 0 ||
+				measurements.PechoCm <= 0 ||
+				measurements.CinturaCm <= 0 ||
+				measurements.CaderaCm <= 0 ||
+				measurements.MangaCm <= 0 {
+				requiereMedidas = true
+			}
+		}
+	}
+
 	return http.StatusOK, &models.APIResponse{
 		Success: true,
 		Data: map[string]interface{}{
 			"requiere_registro": requiereRegistro,
+			"requiere_medidas":  requiereMedidas,
 		},
 	}, nil
 }

@@ -25,6 +25,14 @@ type CreateGarmentChangeRequest struct {
 	NewSize string `json:"newSize"` // → Tallaje.valor_talla
 }
 
+// CreateUniformRequest — body de POST /solicitudes/uniforme
+type CreateUniformRequest struct {
+	UniformID int    `json:"id_uniforme" binding:"required"`
+	Cantidad  int    `json:"cantidad" binding:"required,min=1"`
+	Talla     string `json:"talla" binding:"required"`
+	Motivo    string `json:"motivo"`
+}
+
 // FileUploadResponse — respuesta de POST /archivos/upload
 type FileUploadResponse struct {
 	FileID string `json:"fileId"`

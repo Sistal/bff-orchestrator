@@ -101,7 +101,8 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
-	catalogHandler := handlers.NewCatalogHandler(catalogService)
+	// NewCatalogHandler now requires EmployeeService for user segment resolution
+	catalogHandler := handlers.NewCatalogHandler(catalogService, employeeService)
 	branchHandler := handlers.NewBranchHandler(branchService)
 	requestHandler := handlers.NewRequestHandler(requestService)
 	deliveryHandler := handlers.NewDeliveryHandler(deliveryService)
@@ -152,6 +153,7 @@ func main() {
 		api.GET("/campanas/activa", catalogHandler.GetActiveCampaign)
 
 		// Catalog (Nuevos Endpoints)
+		api.GET("/catalogo/uniformes", catalogHandler.GetUniforms)
 		api.GET("/api/v1/empresas", catalogHandler.GetCompanies)
 		api.GET("/api/v1/empresas/segmentos/:idEmpresa", catalogHandler.GetSegments)
 		api.GET("/api/v1/empresas/sucursales/:idEmpresa", catalogHandler.GetBranches)
@@ -166,6 +168,7 @@ func main() {
 		api.GET("/solicitudes/recent", requestHandler.GetRecentRequests)
 		api.POST("/solicitudes/reposicion", requestHandler.CreateReplenishmentRequest)
 		api.POST("/solicitudes/cambio-prenda", requestHandler.CreateGarmentChangeRequest)
+		api.POST("/solicitudes/uniforme", requestHandler.CreateUniformRequest)
 		api.GET("/solicitudes/:id", requestHandler.GetRequestByID)
 		api.POST("/archivos/upload", requestHandler.UploadFile)
 
@@ -206,9 +209,9 @@ func main() {
 
 				// Rutas con :id — medidas/historial (estática) ANTES que medidas (dinámica)
 				funcionarios.GET("/:id/medidas/historial", employeeHandler.GetMeasurementsHistory)
-				funcionarios.GET("/:id/medidas", employeeHandler.GetMeasurements)
-				funcionarios.POST("/:id/medidas", employeeHandler.RegisterMeasurements)
-				funcionarios.PUT("/:id/medidas", employeeHandler.UpdateMeasurements)
+				funcionarios.GET("/medidas", employeeHandler.GetMeasurements)
+				funcionarios.POST("/medidas", employeeHandler.RegisterMeasurements)
+				funcionarios.PUT("/medidas", employeeHandler.UpdateMeasurements)
 
 				// CRUD Admin con :id — 501 Not Implemented
 				funcionarios.GET("/:id", employeeHandler.GetEmployeeByID)

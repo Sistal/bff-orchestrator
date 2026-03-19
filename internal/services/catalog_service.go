@@ -14,6 +14,7 @@ type CatalogService interface {
 	GetCompanies() ([]models.Empresa, error)
 	GetSegments(companyID int) ([]models.Segmento, error)
 	GetBranches(companyID int) ([]models.Sucursal, error)
+	GetUniformsBySegment(segmentID int) ([]models.Uniform, error)
 }
 
 type MockCatalogService struct{}
@@ -79,6 +80,10 @@ func (s *MockCatalogService) GetBranches(companyID int) ([]models.Sucursal, erro
 	return []models.Sucursal{}, nil
 }
 
+func (s *MockCatalogService) GetUniformsBySegment(segmentID int) ([]models.Uniform, error) {
+	return []models.Uniform{}, nil
+}
+
 type HTTPCatalogService struct {
 	client *clients.CatalogClient
 }
@@ -132,5 +137,13 @@ func (s *HTTPCatalogService) GetSegments(companyID int) ([]models.Segmento, erro
 }
 
 func (s *HTTPCatalogService) GetBranches(companyID int) ([]models.Sucursal, error) {
-	return s.client.GetBranches(companyID)
+	data, err := s.client.GetBranches(companyID)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func (s *HTTPCatalogService) GetUniformsBySegment(segmentID int) ([]models.Uniform, error) {
+	return s.client.GetUniformsBySegment(segmentID)
 }

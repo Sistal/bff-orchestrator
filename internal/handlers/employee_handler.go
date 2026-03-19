@@ -211,25 +211,30 @@ func (h *EmployeeHandler) GetMeasurements(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    resp,
+	})
 }
 
 // RegisterMeasurements godoc
 // @Summary      Register employee measurements
-// @Description  Register body measurements for a specific employee (admin)
+// @Description  Register body measurements for the current employee (inferred from token)
 // @Tags         employees
 // @Security     BearerAuth
 // @Accept       json
 // @Produce      json
-// @Param        id       path      string                   true  "Employee ID"
 // @Param        request  body      models.BodyMeasurements  true  "Body measurements"
 // @Success      201      {object}  models.BodyMeasurements
 // @Failure      400      {object}  models.ErrorResponse
 // @Failure      401      {object}  models.ErrorResponse
 // @Failure      500      {object}  models.ErrorResponse
-// @Router       /api/v1/funcionarios/{id}/medidas [post]
+// @Router       /api/v1/funcionarios/medidas [post]
 func (h *EmployeeHandler) RegisterMeasurements(c *gin.Context) {
-	id := c.Param("id")
+	id, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		return
+	}
 	var req models.BodyMeasurements
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
@@ -240,25 +245,32 @@ func (h *EmployeeHandler) RegisterMeasurements(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, resp)
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,
+		"data":    resp,
+	})
 }
 
 // UpdateMeasurements godoc
 // @Summary      Update employee measurements
-// @Description  Update body measurements for a specific employee (admin)
+// @Description  Update body measurements for the current employee (inferred from token)
 // @Tags         employees
 // @Security     BearerAuth
 // @Accept       json
 // @Produce      json
-// @Param        id       path      string                   true  "Employee ID"
 // @Param        request  body      models.BodyMeasurements  true  "Body measurements"
 // @Success      200      {object}  models.BodyMeasurements
 // @Failure      400      {object}  models.ErrorResponse
 // @Failure      401      {object}  models.ErrorResponse
 // @Failure      500      {object}  models.ErrorResponse
-// @Router       /api/v1/funcionarios/{id}/medidas [put]
+// @Router       /api/v1/funcionarios/medidas [put]
 func (h *EmployeeHandler) UpdateMeasurements(c *gin.Context) {
-	id := c.Param("id")
+	// Se extrae el id_funcionario desde el userID del token, ignorando el param :id
+	id, ok := h.requireEmployeeByUserId(c)
+	if !ok {
+		return
+	}
+
 	var req models.BodyMeasurements
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request", "message": err.Error()})
@@ -269,7 +281,10 @@ func (h *EmployeeHandler) UpdateMeasurements(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Error", "message": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    resp,
+	})
 }
 
 // GetMeasurementsHistory godoc

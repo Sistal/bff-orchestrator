@@ -16,19 +16,7 @@ func NewBranchHandler(s services.BranchService) *BranchHandler {
 	return &BranchHandler{service: s}
 }
 
-// requireEmployeeID extrae el employeeID del contexto y retorna false (con 401) si está vacío.
-// Usado por handlers que operan sobre el funcionario autenticado.
-func requireEmployeeID(c *gin.Context) (string, bool) {
-	id := c.GetString("id_funcionario")
-	if id == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":   "Unauthorized",
-			"message": "Usuario sin funcionario asociado",
-		})
-		return "", false
-	}
-	return id, true
-}
+// requireEmployeeID movido a common.go
 
 // GetAllBranches godoc
 // @Summary      Get all branches

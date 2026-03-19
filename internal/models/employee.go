@@ -65,7 +65,7 @@ type UserPreferences struct {
 // EmployeeProfile — perfil completo del funcionario.
 // Mapea tabla Funcionario con JOINs a cargo, Sucursal y Estado.
 type EmployeeProfile struct {
-	ID              int             `json:"id"`               // id_funcionario
+	ID              int             `json:"id_funcionario"`   // id_funcionario
 	RutFuncionario  string          `json:"rut_funcionario"`  // rut_funcionario
 	Nombres         string          `json:"nombres"`          // nombres
 	ApellidoPaterno string          `json:"apellido_paterno"` // apellido_paterno
@@ -77,6 +77,7 @@ type EmployeeProfile struct {
 	Cargo           CargoRef        `json:"cargo"`            // JOIN cargo
 	Sucursal        SucursalRef     `json:"sucursal"`         // JOIN Sucursal
 	Estado          EstadoRef       `json:"estado"`           // JOIN Estado
+	IDSegmento      int             `json:"id_segmento"`      // fk id_segmento
 	Preferences     UserPreferences `json:"preferences"`      // mock temporal, sin persistencia
 }
 
@@ -148,16 +149,12 @@ type ActivityLog struct {
 
 // BodyMeasurements — medidas corporales.
 // Mapea tabla "Medidas Funcionario". FuncionarioID se infiere del funcionario consultado.
-// Activa se DERIVA: activa = (FechaFin == nil).
 type BodyMeasurements struct {
-	ID            int     `json:"id"`             // id_medidas
-	FuncionarioID int     `json:"funcionario_id"` // inferido del funcionario consultado
+	ID            int     `json:"id_medidas"`     // id_medidas
+	FuncionarioID int     `json:"id_funcionario"` // id_funcionario
 	EstaturaM     float64 `json:"estatura_m"`     // estatura_m numeric(5,2)
 	PechoCm       float64 `json:"pecho_cm"`       // pecho_cm numeric(5,2)
 	CinturaCm     float64 `json:"cintura_cm"`     // cintura_cm numeric(5,2)
 	CaderaCm      float64 `json:"cadera_cm"`      // cadera_cm numeric(5,2)
 	MangaCm       float64 `json:"manga_cm"`       // manga_cm numeric(5,2)
-	FechaInicio   string  `json:"fecha_inicio"`   // fecha_inicio date
-	FechaFin      *string `json:"fecha_fin"`      // fecha_fin date (nullable)
-	Activa        bool    `json:"activa"`         // derivado: FechaFin == nil
 }
